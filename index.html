@@ -105,6 +105,8 @@
 
   /* Busca */
   .modal.search h3{font-family:"Cinzel",serif;font-weight:600;font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin:0 0 18px}
+  .modal.search select{width:100%;font-family:"Cormorant Garamond",serif;font-size:18px;padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:var(--paper);color:var(--ink);margin-bottom:14px}
+  .modal.search select:focus{outline:none;border-color:var(--gold)}
   .ref-input{display:flex;gap:8px;margin-bottom:18px}
   .ref-input input{flex:1;font-family:"Cormorant Garamond",serif;font-size:20px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);}
   .ref-input input:focus{outline:none;border-color:var(--gold)}
@@ -206,6 +208,8 @@
     <div class="modal search" role="dialog" aria-modal="true">
       <button class="close" id="s-close" aria-label="Fechar">&times;</button>
       <h3>Ir para</h3>
+      <span class="field-label">Livro</span>
+      <select id="book-sel"></select>
       <div class="ref-input">
         <input id="ref-text" inputmode="numeric" placeholder="ex.: 1:5" autocomplete="off">
         <button id="ref-go">Ir</button>
@@ -224,8 +228,8 @@
 const FALLBACK = JSON.parse(document.getElementById('data').textContent); // prévia offline: Gênesis 1
 const SUPA_URL = 'https://ghjbljypxksubmcsvaig.supabase.co';
 const SUPA_KEY = 'sb_publishable_qXCYqg1WdmelY9D1mptZXg_U8NdoKby'; // chave publicável: vai só no header apikey
-const BOOK = 'Gen';
-const TOTAL_CAPS = 50;                      // Gênesis tem 50 capítulos
+let BOOKS = [];                             // catálogo vindo da tabela 'livros'
+let curBook = {livro:'Gen', nome:'Gênesis', total_caps:50};
 let loadedCaps = [...new Set(FALLBACK.versos.map(v=>v.cap))];
 let curCap = loadedCaps[0] || 1;
 
@@ -325,18 +329,18 @@ function groupRows(rows,cap){
   const by={};
   rows.forEach(r=>{(by[r.vers]=by[r.vers]||[]).push({v:r.vers,n:r.ord,heb:r.heb,tr:r.tr,s:r.strong,sfull:r.sfull,morph:r.morph,en:r.en,pt:r.pt});});
   return Object.keys(by).map(Number).sort((a,b)=>a-b)
-    .map(v=>({ref:BOOK+' '+cap+':'+v,cap,vers:v,palavras:by[v].sort((a,b)=>a.n-b.n)}));
+    .map(v=>({ref:curBook.livro+' '+cap+':'+v,cap,vers:v,palavras:by[v].sort((a,b)=>a.n-b.n)}));
 }
 async function ensureChapter(cap){
   if(CH[cap]) return;
   if(SUPA_URL){
     try{
-      const url=`${SUPA_URL}/rest/v1/interlinear?livro=eq.${BOOK}&cap=eq.${cap}&order=vers.asc,ord.asc&select=*`;
+      const url=`${SUPA_URL}/rest/v1/interlinear?livro=eq.${curBook.livro}&cap=eq.${cap}&order=vers.asc,ord.asc&select=*`;
       const r=await fetch(url,{headers:{apikey:SUPA_KEY}});
       if(r.ok){ const rows=await r.json(); if(rows.length){ CH[cap]=groupRows(rows,cap); return; } }
     }catch(e){}
   }
-  CH[cap]=FALLBACK.versos.filter(v=>v.cap===cap);   // reserva local (só Gênesis 1)
+  CH[cap]= curBook.livro==='Gen' ? FALLBACK.versos.filter(v=>v.cap===cap) : [];   // reserva local só p/ Gênesis
 }
 
 function autoReading(pal){
@@ -345,9 +349,10 @@ function autoReading(pal){
 }
 
 async function render(cap){
-  curCap=cap; chTitle.textContent="Gênesis "+cap;
-  document.querySelector('.section-title').style.display = cap===1?'block':'none';
-  document.getElementById('xrefs').style.display = cap===1?'block':'none';
+  curCap=cap; chTitle.textContent=curBook.nome+" "+cap;
+  const isGen1 = curBook.livro==='Gen' && cap===1;
+  document.querySelector('.section-title').style.display = isGen1?'block':'none';
+  document.getElementById('xrefs').style.display = isGen1?'block':'none';
   textEl.innerHTML=`<div class="placeholder"><span class="big">Gênesis ${cap}</span>Carregando…</div>`;
   try{ await ensureChapter(cap); }catch(e){}
   if(cap!==curCap) return;               // usuário já mudou de capítulo
@@ -403,16 +408,28 @@ overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.rem
 
 /* ---------- Busca / ir para ---------- */
 const sOverlay=document.getElementById('search-overlay');
-function openSearch(){ buildChapGrid(); sOverlay.classList.add('open'); setTimeout(()=>document.getElementById('ref-text').focus(),80); }
+function openSearch(){ document.getElementById('book-sel').value=curBook.livro; buildChapGrid(); sOverlay.classList.add('open'); setTimeout(()=>document.getElementById('ref-text').focus(),80); }
 function closeSearch(){ sOverlay.classList.remove('open'); }
 document.getElementById('btn-search').onclick=openSearch;
 chTitle.onclick=openSearch;
 document.getElementById('s-close').onclick=closeSearch;
 sOverlay.addEventListener('click',e=>{if(e.target===sOverlay)closeSearch()});
 
+function buildBookSel(){
+  const sel=document.getElementById('book-sel'); if(!sel)return;
+  sel.innerHTML=BOOKS.map(b=>`<option value="${b.livro}">${b.nome}</option>`).join('');
+  sel.value=curBook.livro;
+  sel.onchange=()=>switchBook(sel.value);
+}
+async function switchBook(livro){
+  const b=BOOKS.find(x=>x.livro===livro); if(!b||b.livro===curBook.livro) return;
+  curBook=b; loadedCaps=Array.from({length:b.total_caps},(_,i)=>i+1); cur=0;
+  for(const k in CH) delete CH[k];      // limpa o cache do livro anterior
+  await render(1); buildChapGrid();
+}
 function buildChapGrid(){
   const g=document.getElementById('chap-grid'); g.innerHTML='';
-  for(let c=1;c<=TOTAL_CAPS;c++){
+  for(let c=1;c<=curBook.total_caps;c++){
     const b=document.createElement('button');
     b.className='chip'+(c===curCap?' active':''); b.textContent=c;
     b.disabled=!loadedCaps.includes(c);
@@ -485,20 +502,21 @@ const mql=window.matchMedia('(max-width:640px)');
 function applyMode(){ if(mql.matches){document.body.classList.add('mobile');setupPager();}else{document.body.classList.remove('mobile');verseEls.forEach(el=>el.classList.remove('active'));} }
 mql.addEventListener('change',applyMode);
 
-/* ---------- Início: descobre nº de capítulos no Supabase; se falhar, usa a prévia ---------- */
+/* ---------- Início: lê o catálogo de livros do Supabase ---------- */
 async function boot(){
-  let total=null;
   if(SUPA_URL){
     try{
-      const r=await fetch(`${SUPA_URL}/rest/v1/livros?livro=eq.${BOOK}&select=total_caps`,{headers:{apikey:SUPA_KEY}});
-      if(r.ok){ const j=await r.json(); if(j[0]&&j[0].total_caps) total=j[0].total_caps; }
+      const r=await fetch(`${SUPA_URL}/rest/v1/livros?select=*&order=ordem.asc,nome.asc`,{headers:{apikey:SUPA_KEY}});
+      if(r.ok){ const j=await r.json(); if(j.length) BOOKS=j; }
     }catch(e){}
   }
-  loadedCaps = total ? Array.from({length:total},(_,i)=>i+1)
-                     : [...new Set(FALLBACK.versos.map(v=>v.cap))].sort((a,b)=>a-b);
-  curCap = loadedCaps.includes(1)?1:loadedCaps[0];
-  await render(curCap); applyMode();
-  showToast(total ? `Gênesis — ${total} capítulos (Supabase)` : 'Prévia local (Gênesis 1). Carregue os dados no Supabase.');
+  if(!BOOKS.length) BOOKS=[{livro:'Gen',nome:'Gênesis',total_caps:Math.max(...FALLBACK.versos.map(v=>v.cap))}];
+  curBook = BOOKS.find(b=>b.livro==='Gen') || BOOKS[0];
+  loadedCaps = Array.from({length:curBook.total_caps},(_,i)=>i+1);
+  buildBookSel();
+  curCap=1;
+  await render(1); applyMode();
+  showToast(BOOKS.length>1 ? `${BOOKS.length} livros carregados (Supabase)` : `${curBook.nome} — ${curBook.total_caps} capítulos`);
 }
 boot();
 </script>
