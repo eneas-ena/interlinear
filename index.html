@@ -317,6 +317,7 @@ function decodeMorph(code){
 const textEl=document.getElementById('text');
 const chTitle=document.getElementById('ch-title');
 function versesOf(cap){ return DATA.versos.filter(v=>v.cap===cap); }
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 function autoReading(pal){
   return pal.map(w=>w.pt).filter(x=>x&&x!=="—").map(x=>x==="e —"?"e":x).join(" ")
@@ -333,17 +334,17 @@ function render(cap){
   }else{
     textEl.innerHTML=vs.map(vv=>{
       const cards=vv.palavras.map((w,i)=>`
-        <button class="word" data-c="${vv.cap}" data-v="${vv.vers}" data-i="${i}" aria-label="${w.pt} — Strong ${w.s}">
-          <div class="strong">${w.s}</div>
-          <div class="heb">${w.heb}</div>
-          <div class="translit">${w.tr}</div>
-          <div class="gloss${w.pt==='—'?' marker':''}">${w.pt||w.en}</div>
-          <div class="gloss-en">${w.en}</div>
-          <div class="morph">${w.morph.replace(/\//g,'·')}</div>
+        <button class="word" data-c="${vv.cap}" data-v="${vv.vers}" data-i="${i}" aria-label="${esc(w.pt||w.en)} — Strong ${esc(w.s)}">
+          <div class="strong">${esc(w.s)}</div>
+          <div class="heb">${esc(w.heb)}</div>
+          <div class="translit">${esc(w.tr)}</div>
+          <div class="gloss${w.pt==='—'?' marker':''}">${esc(w.pt||w.en)}</div>
+          <div class="gloss-en">${esc(w.en)}</div>
+          <div class="morph">${esc(w.morph.replace(/\//g,'·'))}</div>
         </button>`).join('');
       return `<section class="verse" id="v-${vv.cap}-${vv.vers}" data-verse="${vv.vers}">
         <div class="verse-flow"><div class="vnum">${vv.vers}</div>${cards}</div>
-        <div class="reading"><span class="rlabel">Leitura — palavra a palavra</span>${autoReading(vv.palavras)}</div>
+        <div class="reading"><span class="rlabel">Leitura — palavra a palavra</span>${esc(autoReading(vv.palavras))}</div>
       </section>`;
     }).join('');
   }
