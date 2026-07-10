@@ -76,12 +76,12 @@
   .word.hl{border-color:var(--gold);box-shadow:var(--shadow-hi),0 0 0 3px var(--gold-soft)}
   .strong{font-family:"Cinzel",serif;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--gold);margin-bottom:6px;display:inline-flex;align-items:center;gap:4px;}
   .strong::before{content:"⌗";font-size:11px;opacity:.7}
-  .heb{font-family:"Frank Ruhl Libre",serif;direction:rtl;font-size:30px;line-height:1.25;color:var(--ink);margin:2px 0 6px;min-height:38px;font-weight:500;}
-  .translit{font-style:italic;color:var(--muted);font-size:16px;line-height:1.2;margin-bottom:6px}
+  .heb{font-family:"Frank Ruhl Libre",serif;direction:rtl;font-size:30px;line-height:1.25;color:var(--ink);margin:2px 0 6px;min-height:38px;font-weight:500;overflow-wrap:break-word}
+  .translit{font-style:italic;color:var(--muted);font-size:16px;line-height:1.2;margin-bottom:6px;overflow-wrap:break-word;word-break:break-word}
   body.hide-translit .translit{display:none}
-  .gloss{font-size:20px;font-weight:600;color:var(--ink);line-height:1.15;margin-bottom:2px}
+  .gloss{font-size:20px;font-weight:600;color:var(--ink);line-height:1.15;margin-bottom:2px;overflow-wrap:break-word;word-break:break-word;hyphens:auto}
   .gloss.marker{color:var(--muted);font-weight:500}
-  .gloss-en{font-size:14px;font-style:italic;color:var(--muted);line-height:1.1;margin-top:2px;display:none}
+  .gloss-en{font-size:14px;font-style:italic;color:var(--muted);line-height:1.1;margin-top:2px;display:none;overflow-wrap:break-word;word-break:break-word}
   body.show-en .gloss-en{display:block}
   .morph{margin-top:8px;padding-top:7px;border-top:1px dashed var(--line);font-family:"Cinzel",serif;font-size:9.5px;letter-spacing:.03em;color:var(--muted);}
 
