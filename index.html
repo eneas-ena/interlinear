@@ -385,9 +385,21 @@ function updateChapNav(){
   document.getElementById('ch-next').disabled = !loadedCaps.includes(curCap+1);
 }
 
+const LEX={};                                // cache do léxico (por Strong)
+async function fetchLex(strong){
+  if(LEX[strong]!==undefined) return LEX[strong];
+  if(STRONG_PT[strong]){ LEX[strong]=STRONG_PT[strong]; return LEX[strong]; }
+  try{
+    const r=await fetch(`${SUPA_URL}/rest/v1/lexico?strong=eq.${encodeURIComponent(strong)}&select=definicao`,{headers:{apikey:SUPA_KEY}});
+    if(r.ok){ const j=await r.json(); LEX[strong]= j[0]&&j[0].definicao ? j[0].definicao : null; }
+    else LEX[strong]=null;
+  }catch(e){ LEX[strong]=null; }
+  return LEX[strong];
+}
+
 /* ---------- Modal da palavra ---------- */
 const overlay=document.getElementById('overlay');
-function openWord(w){
+async function openWord(w){
   document.getElementById('m-strong').textContent="Strong nº "+w.s;
   document.getElementById('m-heb').textContent=w.heb;
   document.getElementById('m-translit').textContent=w.tr;
@@ -395,8 +407,11 @@ function openWord(w){
   document.getElementById('m-glossen').textContent="Inglês: "+w.en;
   document.getElementById('m-morph').textContent=decodeMorph(w.morph);
   document.getElementById('m-morphcode').textContent="Código: "+w.morph;
-  document.getElementById('m-def').textContent=STRONG_PT[w.s]||"Definição completa virá do léxico em português (etapa em lote).";
+  const def=document.getElementById('m-def');
+  def.textContent='Carregando…';
   overlay.classList.add('open');
+  const d=await fetchLex(w.s);
+  def.textContent = d || 'Definição ainda não disponível para este Strong.';
 }
 textEl.addEventListener('click',e=>{
   const c=e.target.closest('.word'); if(!c)return;
