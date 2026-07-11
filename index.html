@@ -108,9 +108,9 @@
     letter-spacing:.04em;background:linear-gradient(180deg,var(--ink),#3a4c72);-webkit-background-clip:text;background-clip:text}
   [data-theme="dark"] .hero h1{background:linear-gradient(180deg,var(--gold),#8f7420);-webkit-text-fill-color:transparent}
   .hero .tag{font-family:"Cinzel",serif;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);margin-top:10px}
-  .hero .verse{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:clamp(18px,2.6vw,22px);
+  .hero .hero-verse{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:clamp(18px,2.6vw,22px);
     color:var(--muted);margin:18px auto 0;max-width:560px;line-height:1.5}
-  .hero .verse b{display:block;font-style:normal;font-weight:500;color:var(--ink);font-size:1.15em;margin-bottom:4px;direction:ltr}
+  .hero .hero-verse b{display:block;font-style:normal;font-weight:500;color:var(--ink);font-size:1.15em;margin-bottom:4px;direction:ltr}
   .home-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:26px 0 6px}
   .btn-lg{font-family:"Cinzel",serif;font-size:12px;letter-spacing:.06em;padding:13px 24px;border-radius:999px;cursor:pointer;
     border:1px solid var(--gold);background:var(--navy);color:#F5EED8;display:inline-flex;align-items:center;gap:8px;transition:transform .14s,box-shadow .18s}
@@ -249,7 +249,7 @@
            onerror="this.style.display='none'">
       <h1>InterTextus</h1>
       <div class="tag">Bíblia Interlinear</div>
-      <p class="verse">
+      <p class="hero-verse">
         <b>ἐν ἀρχῇ ἦν ὁ λόγος</b>
         Hebraico · Grego · Transliteração · Strong · Análise gramatical
       </p>
@@ -836,10 +836,10 @@ function showToast(m){toast.textContent=m;toast.classList.add('show');clearTimeo
 /* ---------- Pager mobile ---------- */
 const pCount=document.getElementById('p-count'),pPrev=document.getElementById('p-prev'),pNext=document.getElementById('p-next');
 let cur=0,verseEls=[];
-function setupPager(){ verseEls=[...document.querySelectorAll('.verse')]; if(cur>verseEls.length-1)cur=0; paint(); }
+function setupPager(){ verseEls=[...textEl.querySelectorAll('.verse')]; if(cur>verseEls.length-1)cur=0; paint(); }
 function paint(){
   verseEls.forEach((el,i)=>el.classList.toggle('active',i===cur));
-  if(verseEls[cur]){ pCount.textContent='Gênesis '+curCap+':'+verseEls[cur].dataset.verse; window.scrollTo({top:0}); }
+  if(verseEls[cur]){ pCount.textContent=curBook.nome+' '+curCap+':'+verseEls[cur].dataset.verse; window.scrollTo({top:0}); }
   pPrev.disabled=cur===0; pNext.disabled=cur===verseEls.length-1;
 }
 pPrev.onclick=()=>{if(cur>0){cur--;paint();}};
