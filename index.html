@@ -91,6 +91,13 @@
   body.grc .m-heb{direction:ltr;font-family:"Cormorant Garamond",serif;font-size:38px;font-weight:600;text-align:left}
   body.grc .vnum{margin-inline-end:2px}
 
+  /* Controle de velocidade */
+  .speed{display:flex;align-items:center;gap:7px;padding:5px 11px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+  .speed:hover{border-color:var(--gold)}
+  .speed input[type=range]{width:78px;accent-color:var(--gold);cursor:pointer;background:transparent}
+  .speed span{font-family:"Cinzel",serif;font-size:10px;letter-spacing:.04em;color:var(--gold);min-width:30px;text-align:right}
+  @media(max-width:640px){.speed input[type=range]{width:62px}}
+
   /* Botões de áudio */
   .spk{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:999px;border:none;background:transparent;
     color:var(--muted);cursor:pointer;display:grid;place-items:center;opacity:0;transition:opacity .15s,color .15s;padding:0}
@@ -183,6 +190,11 @@
         <button class="pill" id="t-translit" aria-pressed="true">Transliteração</button>
         <button class="pill" id="t-en" aria-pressed="false">Inglês</button>
         <button class="pill" id="t-reading" aria-pressed="false">Leitura</button>
+        <div class="speed" title="Velocidade da leitura">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+          <input type="range" id="rate" min="0.4" max="1.2" step="0.05" value="0.7">
+          <span id="rate-val">0,7×</span>
+        </div>
         <button class="icon-btn" id="t-theme" title="Alternar tema" aria-label="Tema">
           <svg id="theme-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
@@ -541,6 +553,16 @@ function montarFala(itens){
   return texto ? {texto,voz,lang} : null;
 }
 
+/* Velocidade da leitura (guardada no aparelho) */
+let RATE = parseFloat(localStorage.getItem('interlinear_rate') || '0.7');
+const rateEl=document.getElementById('rate'), rateVal=document.getElementById('rate-val');
+function pintaRate(){ rateEl.value=RATE; rateVal.textContent=RATE.toFixed(2).replace('.',',').replace(/0$/,'')+'×'; }
+rateEl.addEventListener('input',()=>{
+  RATE=parseFloat(rateEl.value); pintaRate();
+  try{ localStorage.setItem('interlinear_rate',String(RATE)); }catch(e){}
+});
+pintaRate();
+
 let ultimaFala=0;
 function falar(itens){
   const S=window.speechSynthesis;
@@ -553,21 +575,22 @@ function falar(itens){
 
   const disparar=()=>{
     const u=new SpeechSynthesisUtterance(f.texto);
-    u.voice=f.voz; u.lang=f.lang; u.rate=0.85; u.pitch=1; u.volume=1;
+    u.voice=f.voz; u.lang=f.lang; u.rate=RATE; u.pitch=1; u.volume=1;
     u.onerror=()=>{ try{S.cancel();}catch(e){} };
-    // “Mantém vivo”: alguns navegadores pausam sozinhos em falas longas
     const keep=setInterval(()=>{ if(S.speaking){ S.pause(); S.resume(); } else clearInterval(keep); },9000);
     u.onend=()=>clearInterval(keep);
     S.speak(u);
-    // Se em 300ms nada começou, tenta uma vez mais (contorna o travamento)
     const t0=Date.now(); ultimaFala=t0;
     setTimeout(()=>{
       if(ultimaFala===t0 && !S.speaking && !S.pending){
-        try{ S.cancel(); S.resume(); S.speak(new SpeechSynthesisUtterance(f.texto)); }catch(e){}
+        try{ S.cancel(); S.resume();
+          const u2=new SpeechSynthesisUtterance(f.texto);
+          u2.voice=f.voz; u2.lang=f.lang; u2.rate=RATE;
+          S.speak(u2);
+        }catch(e){}
       }
     },300);
   };
-  // pequeno intervalo após o cancel() — sem isso, Safari/Chrome engasgam
   setTimeout(disparar, 90);
 }
 function avisoVoz(){
