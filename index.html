@@ -170,6 +170,16 @@
     padding:8px 14px;border-radius:999px;border:1px solid var(--gold);background:transparent;color:var(--gold);cursor:pointer;margin-top:10px;transition:all .18s}
   .spk-modal:hover{background:var(--gold);color:var(--navy)}
 
+  /* Referências cruzadas */
+  .xref{direction:ltr;margin:10px 4px 0;display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+  .xref .xlabel{font-family:"Cinzel",serif;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-right:2px}
+  .xref a{font-family:"Cormorant Garamond",serif;font-size:16px;color:var(--ink);text-decoration:none;
+    background:var(--gold-soft);border:1px solid transparent;border-radius:999px;padding:3px 11px;cursor:pointer;transition:all .15s;white-space:nowrap}
+  .xref a:hover{border-color:var(--gold);color:var(--gold)}
+  .xref .xmore{font-size:14px;color:var(--muted);font-style:italic;background:transparent;cursor:pointer;border:none;padding:3px 4px}
+  .xref .xmore:hover{color:var(--gold)}
+  body.no-xref .xref{display:none}
+
   .placeholder{text-align:center;padding:80px 20px;color:var(--muted);font-style:italic;font-size:20px}
   .placeholder .big{font-family:"Cinzel",serif;font-style:normal;font-size:15px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;display:block}
 
@@ -277,7 +287,7 @@
     </section>
 
     <div class="home-foot">
-      Texto original e análise morfológica: STEPBible (Tyndale House, Cambridge), licença CC BY 4.0.
+      Texto original e análise morfológica: STEPBible (Tyndale House, Cambridge), licença CC BY 4.0.<br>Referências cruzadas: OpenBible.info, a partir do Treasury of Scripture Knowledge (domínio público), licença CC BY.
       <span class="src">Traduções em português e definições do léxico geradas com IA e revisadas — para estudo pessoal.</span>
     </div>
   </div>
@@ -297,6 +307,7 @@
         <button class="pill" id="t-translit" aria-pressed="true">Transliteração</button>
         <button class="pill" id="t-en" aria-pressed="false">Inglês</button>
         <button class="pill" id="t-reading" aria-pressed="false">Leitura</button>
+        <button class="pill" id="t-xref" aria-pressed="true">Referências</button>
         <div class="speed" title="Velocidade da leitura — 0× é o normal; os demais vão reduzindo">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
           <button class="rate-btn" data-rate="1">0×</button>
@@ -528,6 +539,7 @@ async function render(cap){
   buildVerseGrid();
   updateChapNav();
   salvarPosicao();
+  carregaXrefs(cap).then(m=>{ if(cap===curCap) pintaXrefs(m); });
   if(document.body.classList.contains('mobile')){ cur=0; setupPager(); }
 }
 function updateChapNav(){
@@ -712,6 +724,54 @@ function avisoVoz(){
   return '';
 }
 
+/* ============ Referências cruzadas ============ */
+const XREF={};                        // cache por capítulo
+function nomeLivro(cod){
+  const b=BOOKS.find(x=>x.livro===cod);
+  return b ? b.nome : cod;
+}
+async function carregaXrefs(cap){
+  const chave=curBook.livro+'|'+cap;
+  if(XREF[chave]) return XREF[chave];
+  const mapa={};
+  try{
+    const url=`${SUPA_URL}/rest/v1/referencias?livro=eq.${curBook.livro}&cap=eq.${cap}&order=vers.asc,votos.desc&select=vers,r_livro,r_cap,r_vers,r_vers_f,votos`;
+    const r=await fetch(url,{headers:{apikey:SUPA_KEY}});
+    if(r.ok){ (await r.json()).forEach(x=>{ (mapa[x.vers]=mapa[x.vers]||[]).push(x); }); }
+  }catch(e){}
+  XREF[chave]=mapa; return mapa;
+}
+function pintaXrefs(mapa){
+  Object.entries(mapa).forEach(([vers,lista])=>{
+    const sec=document.getElementById(`v-${curCap}-${vers}`);
+    if(!sec || sec.querySelector('.xref')) return;
+    const div=document.createElement('div');
+    div.className='xref';
+    const link=x=>{
+      const fim = x.r_vers_f && x.r_vers_f>x.r_vers ? '-'+x.r_vers_f : '';
+      const rot = `${nomeLivro(x.r_livro)} ${x.r_cap}:${x.r_vers}${fim}`;
+      return `<a data-xr="${esc(x.r_livro)}|${x.r_cap}|${x.r_vers}">${esc(rot)}</a>`;
+    };
+    const visiveis=lista.slice(0,6), resto=lista.slice(6);
+    div.innerHTML=`<span class="xlabel">Referências</span>`+visiveis.map(link).join('')+
+      (resto.length?`<button class="xmore">+${resto.length}</button>`:'');
+    if(resto.length){
+      div.querySelector('.xmore').onclick=(e)=>{
+        e.stopPropagation();
+        e.target.remove();
+        div.insertAdjacentHTML('beforeend', resto.map(link).join(''));
+      };
+    }
+    sec.appendChild(div);
+  });
+}
+async function irParaReferencia(livro,cap,vers){
+  if(!BOOKS.some(b=>b.livro===livro)){ showToast('Livro ainda não carregado no banco.'); return; }
+  if(livro!==curBook.livro){ await abrirLivro(livro,cap); }
+  else if(cap!==curCap){ await render(cap); }
+  setTimeout(()=>jumpToVerse(cap,vers),120);
+}
+
 /* ---------- Modal da palavra ---------- */
 const overlay=document.getElementById('overlay');
 async function openWord(w){
@@ -734,6 +794,11 @@ async function openWord(w){
   def.textContent = d || 'Definição ainda não disponível para este Strong.';
 }
 textEl.addEventListener('click',e=>{
+  const xr=e.target.closest('[data-xr]');            // clique numa referência cruzada
+  if(xr){ e.preventDefault(); e.stopPropagation();
+    const [l,c,v]=xr.dataset.xr.split('|');
+    irParaReferencia(l,+c,+v);
+    return; }
   const sv=e.target.closest('[data-spkv]');           // ouvir versículo inteiro
   if(sv){ e.stopPropagation();
     const [c,v]=sv.dataset.spkv.split('|').map(Number);
@@ -820,6 +885,11 @@ document.querySelectorAll('[data-jump]').forEach(a=>a.addEventListener('click',e
 document.getElementById('t-translit').addEventListener('click',function(){const on=this.getAttribute('aria-pressed')==='true';this.setAttribute('aria-pressed',String(!on));document.body.classList.toggle('hide-translit',on);});
 function toggleBody(id,cls){const b=document.getElementById(id);b.addEventListener('click',()=>{const on=b.getAttribute('aria-pressed')==='true';b.setAttribute('aria-pressed',String(!on));document.body.classList.toggle(cls,!on);});}
 toggleBody('t-en','show-en'); toggleBody('t-reading','show-reading');
+document.getElementById('t-xref').addEventListener('click',function(){
+  const on=this.getAttribute('aria-pressed')==='true';
+  this.setAttribute('aria-pressed',String(!on));
+  document.body.classList.toggle('no-xref', on);
+});
 const themeBtn=document.getElementById('t-theme'),ico=document.getElementById('theme-ico');
 const sun='<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
 const moon='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
