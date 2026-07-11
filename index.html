@@ -92,11 +92,15 @@
   body.grc .vnum{margin-inline-end:2px}
 
   /* Controle de velocidade */
-  .speed{display:flex;align-items:center;gap:7px;padding:5px 11px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+  .speed{display:flex;align-items:center;gap:3px;padding:4px 9px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
   .speed:hover{border-color:var(--gold)}
-  .speed input[type=range]{width:78px;accent-color:var(--gold);cursor:pointer;background:transparent}
-  .speed span{font-family:"Cinzel",serif;font-size:10px;letter-spacing:.04em;color:var(--gold);min-width:30px;text-align:right}
-  @media(max-width:640px){.speed input[type=range]{width:62px}}
+  .speed>svg{margin-right:3px;flex:0 0 auto}
+  .rate-btn{font-family:"Cinzel",serif;font-size:10px;letter-spacing:.02em;padding:5px 8px;border-radius:999px;
+    border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
+  .rate-btn:hover{color:var(--ink);border-color:var(--line)}
+  .rate-btn.active{background:var(--navy);color:#F5EED8;border-color:var(--navy)}
+  [data-theme="dark"] .rate-btn.active{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+  @media(max-width:640px){.rate-btn{padding:5px 6px;font-size:9.5px}}
 
   /* Botões de áudio */
   .spk{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:999px;border:none;background:transparent;
@@ -190,10 +194,12 @@
         <button class="pill" id="t-translit" aria-pressed="true">Transliteração</button>
         <button class="pill" id="t-en" aria-pressed="false">Inglês</button>
         <button class="pill" id="t-reading" aria-pressed="false">Leitura</button>
-        <div class="speed" title="Velocidade da leitura">
+        <div class="speed" title="Velocidade da leitura — 0× é o normal; os demais vão reduzindo">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
-          <input type="range" id="rate" min="0.4" max="1.2" step="0.05" value="0.7">
-          <span id="rate-val">0,7×</span>
+          <button class="rate-btn" data-rate="1">0×</button>
+          <button class="rate-btn" data-rate="0.6">−0,5×</button>
+          <button class="rate-btn" data-rate="0.4">−1×</button>
+          <button class="rate-btn" data-rate="0.25">−1,5×</button>
         </div>
         <button class="icon-btn" id="t-theme" title="Alternar tema" aria-label="Tema">
           <svg id="theme-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -554,13 +560,15 @@ function montarFala(itens){
 }
 
 /* Velocidade da leitura (guardada no aparelho) */
-let RATE = parseFloat(localStorage.getItem('interlinear_rate') || '0.7');
-const rateEl=document.getElementById('rate'), rateVal=document.getElementById('rate-val');
-function pintaRate(){ rateEl.value=RATE; rateVal.textContent=RATE.toFixed(2).replace('.',',').replace(/0$/,'')+'×'; }
-rateEl.addEventListener('input',()=>{
-  RATE=parseFloat(rateEl.value); pintaRate();
+let RATE = parseFloat(localStorage.getItem('interlinear_rate') || '0.4');
+const rateBtns=[...document.querySelectorAll('.rate-btn')];
+function pintaRate(){
+  rateBtns.forEach(b=>b.classList.toggle('active', parseFloat(b.dataset.rate)===RATE));
+}
+rateBtns.forEach(b=>b.addEventListener('click',()=>{
+  RATE=parseFloat(b.dataset.rate); pintaRate();
   try{ localStorage.setItem('interlinear_rate',String(RATE)); }catch(e){}
-});
+}));
 pintaRate();
 
 let ultimaFala=0;
