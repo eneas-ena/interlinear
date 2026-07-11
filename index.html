@@ -91,6 +91,19 @@
   body.grc .m-heb{direction:ltr;font-family:"Cormorant Garamond",serif;font-size:38px;font-weight:600;text-align:left}
   body.grc .vnum{margin-inline-end:2px}
 
+  /* Botões de áudio */
+  .spk{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:999px;border:none;background:transparent;
+    color:var(--muted);cursor:pointer;display:grid;place-items:center;opacity:0;transition:opacity .15s,color .15s;padding:0}
+  .word:hover .spk,.word:focus-within .spk{opacity:.75}
+  .spk:hover{color:var(--gold);opacity:1}
+  body.mobile .spk{opacity:.5}
+  .spk-verse{background:transparent;border:1px solid var(--line);border-radius:999px;width:30px;height:30px;
+    display:grid;place-items:center;color:var(--muted);cursor:pointer;flex:0 0 auto;align-self:center;margin-inline-start:2px;transition:all .18s}
+  .spk-verse:hover{border-color:var(--gold);color:var(--gold)}
+  .spk-modal{display:inline-flex;align-items:center;gap:7px;font-family:"Cinzel",serif;font-size:11px;letter-spacing:.06em;
+    padding:8px 14px;border-radius:999px;border:1px solid var(--gold);background:transparent;color:var(--gold);cursor:pointer;margin-top:10px;transition:all .18s}
+  .spk-modal:hover{background:var(--gold);color:var(--navy)}
+
   .placeholder{text-align:center;padding:80px 20px;color:var(--muted);font-style:italic;font-size:20px}
   .placeholder .big{font-family:"Cinzel",serif;font-style:normal;font-size:15px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;display:block}
 
@@ -203,6 +216,11 @@
       <div class="m-strong" id="m-strong"></div>
       <div class="m-heb" id="m-heb"></div>
       <div class="m-translit" id="m-translit"></div>
+      <button class="spk-modal" id="m-spk" title="Ouvir">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+        Ouvir
+      </button>
+      <div class="m-note" id="m-spknote" style="font-size:14px"></div>
       <div class="m-row"><span class="m-label">Tradução</span><div class="m-value" id="m-gloss"></div><div class="m-note" id="m-glossen"></div></div>
       <div class="m-row"><span class="m-label">Análise gramatical</span><div class="m-value" id="m-morph"></div><div class="m-note" id="m-morphcode"></div></div>
       <div class="m-row"><span class="m-label">Léxico (Strong)</span><div class="m-value" id="m-def"></div></div>
@@ -368,8 +386,11 @@ async function render(cap){
     textEl.innerHTML=`<div class="placeholder"><span class="big">Capítulo ${cap}</span>Este capítulo ainda não está disponível no banco.</div>`;
   }else{
     textEl.innerHTML=vs.map(vv=>{
+      const ICO='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>';
+      const ICOV='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
       const cards=vv.palavras.map((w,i)=>`
         <button class="word" data-c="${vv.cap}" data-v="${vv.vers}" data-i="${i}" aria-label="${esc(w.pt||w.en)} — Strong ${esc(w.s)}">
+          <span class="spk" data-spk="${vv.cap}|${vv.vers}|${i}" role="button" tabindex="-1" aria-label="Ouvir palavra" title="Ouvir">${ICO}</span>
           <div class="strong">${esc(w.s)}</div>
           <div class="heb">${esc(w.heb)}</div>
           <div class="translit">${esc(w.tr)}</div>
@@ -378,7 +399,7 @@ async function render(cap){
           <div class="morph">${esc(w.morph.replace(/\//g,'·'))}</div>
         </button>`).join('');
       return `<section class="verse" id="v-${vv.cap}-${vv.vers}" data-verse="${vv.vers}">
-        <div class="verse-flow"><div class="vnum">${vv.vers}</div>${cards}</div>
+        <div class="verse-flow"><div class="vnum">${vv.vers}</div>${cards}<button class="spk-verse" data-spkv="${vv.cap}|${vv.vers}" title="Ouvir o versículo" aria-label="Ouvir o versículo inteiro">${ICOV}</button></div>
         <div class="reading"><span class="rlabel">Leitura — palavra a palavra</span>${esc(autoReading(vv.palavras))}</div>
       </section>`;
     }).join('');
@@ -453,6 +474,82 @@ function decodeGreek(code){
 }
 function isGreek(w){ return (w.sfull&&w.sfull[0]==='G') || w.lang==='grc' || (curBook.idioma==='grc'); }
 
+/* ============================================================
+   ÁUDIO (TTS) — voz do próprio aparelho, sem custo/servidor
+   Hebraico: voz he-IL (hebraico moderno).
+   Grego: as vozes de grego do sistema leem GREGO MODERNO (itacismo).
+   Para a pronúncia ERASMIANA, convertemos a palavra numa grafia
+   fonética e usamos uma voz ESPANHOLA (castelhano), que possui
+   justamente os sons θ (z/c) e χ (j) e vogais puras.
+   ============================================================ */
+let VOICES=[];
+function loadVoices(){ VOICES=window.speechSynthesis?speechSynthesis.getVoices():[]; }
+if(window.speechSynthesis){ loadVoices(); speechSynthesis.onvoiceschanged=loadVoices; }
+function pickVoice(prefixos){
+  for(const p of prefixos){
+    const v=VOICES.find(v=>v.lang&&v.lang.toLowerCase().startsWith(p));
+    if(v) return v;
+  }
+  return null;
+}
+
+/* --- Grego -> grafia erasmiana aproximada (lida por voz espanhola) --- */
+const DIGRAF=[["γγ","ng"],["γκ","nk"],["γχ","nj"],["γξ","nx"],
+  ["ου","u"],["αυ","au"],["ευ","eu"],["ηυ","eu"],
+  ["αι","ai"],["ει","ei"],["οι","oi"],["υι","ui"],
+  ["θ","z"],  /* z castelhano = som "th" */
+  ["χ","j"],  /* j castelhano = som "kh" */
+  ["φ","f"],["ψ","ps"],["ξ","x"],["ζ","ds"]];
+const LETRA={"α":"a","β":"b","γ":"g","δ":"d","ε":"e","η":"e","ι":"i","κ":"k","λ":"l","μ":"m",
+  "ν":"n","ο":"o","π":"p","ρ":"r","σ":"s","ς":"s","τ":"t","υ":"u","ω":"o"};
+function erasmiano(txt){
+  let s=txt.normalize('NFD');
+  const aspero=/\u0314/.test(s);                 // espírito rude -> h inicial
+  s=s.replace(/[\u0300-\u036f]/g,'').toLowerCase(); // tira acentos/espíritos
+  for(const [a,b] of DIGRAF) s=s.split(a).join(b);
+  s=[...s].map(c=>LETRA[c]!==undefined?LETRA[c]:c).join('');
+  s=s.replace(/[^a-z]/g,'');
+  if(aspero) s='j'+s;                            // aspiração inicial
+  return s;
+}
+/* --- Hebraico: limpa a transliteração para leitura de reserva --- */
+function translitLimpa(tr){
+  return (tr||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/·/g,'').replace(/[ʾʿ’‘']/g,'').replace(/ə/g,'e').trim();
+}
+
+function falar(itens){                            // itens: [{w}] em sequência
+  if(!window.speechSynthesis){ showToast('Este navegador não permite áudio.'); return; }
+  speechSynthesis.cancel();
+  const grego = curBook.idioma==='grc';
+  const vNativa = grego ? pickVoice(['el']) : pickVoice(['he','iw']);
+  const vEsp    = pickVoice(['es-es','es']);
+  if(grego && !vEsp && !vNativa){ showToast('Nenhuma voz disponível para grego neste aparelho.'); return; }
+  if(!grego && !vNativa && !vEsp){ showToast('Nenhuma voz de hebraico instalada neste aparelho.'); return; }
+
+  itens.forEach((w,i)=>{
+    let texto, voz, lang;
+    if(grego){
+      if(vEsp){ texto=erasmiano(w.heb); voz=vEsp; lang='es-ES'; }   // erasmiana
+      else    { texto=w.heb;            voz=vNativa; lang='el-GR'; }
+    }else{
+      if(vNativa){ texto=w.heb;              voz=vNativa; lang='he-IL'; }
+      else       { texto=translitLimpa(w.tr); voz=vEsp;    lang='es-ES'; }
+    }
+    if(!texto) return;
+    const u=new SpeechSynthesisUtterance(texto);
+    if(voz) u.voice=voz;
+    u.lang=lang; u.rate=0.85; u.pitch=1;
+    speechSynthesis.speak(u);
+  });
+}
+function avisoVoz(){
+  const grego = curBook.idioma==='grc';
+  if(grego && !pickVoice(['es','el'])) return 'Sem voz disponível para grego.';
+  if(!grego && !pickVoice(['he','iw','es'])) return 'Sem voz de hebraico instalada.';
+  return '';
+}
+
 /* ---------- Modal da palavra ---------- */
 const overlay=document.getElementById('overlay');
 async function openWord(w){
@@ -465,16 +562,33 @@ async function openWord(w){
   document.getElementById('m-morphcode').textContent="Código: "+w.morph;
   const def=document.getElementById('m-def');
   def.textContent='Carregando…';
+  const aviso=avisoVoz();
+  document.getElementById('m-spk').onclick=()=>falar([w]);
+  document.getElementById('m-spk').style.display = aviso?'none':'inline-flex';
+  document.getElementById('m-spknote').textContent = aviso ||
+    (curBook.idioma==='grc' ? 'Pronúncia erasmiana aproximada.' : 'Pronúncia do hebraico (voz do aparelho).');
   overlay.classList.add('open');
   const d=await fetchLex(w);
   def.textContent = d || 'Definição ainda não disponível para este Strong.';
 }
 textEl.addEventListener('click',e=>{
+  const sv=e.target.closest('[data-spkv]');           // ouvir versículo inteiro
+  if(sv){ e.stopPropagation();
+    const [c,v]=sv.dataset.spkv.split('|').map(Number);
+    const vv=versesOf(c).find(x=>x.vers===v);
+    if(vv) falar(vv.palavras.filter(w=>w.heb));
+    return; }
+  const sp=e.target.closest('[data-spk]');            // ouvir uma palavra
+  if(sp){ e.stopPropagation();
+    const [c,v,i]=sp.dataset.spk.split('|').map(Number);
+    const vv=versesOf(c).find(x=>x.vers===v);
+    if(vv) falar([vv.palavras[i]]);
+    return; }
   const c=e.target.closest('.word'); if(!c)return;
   const vv=versesOf(+c.dataset.c).find(x=>x.vers===+c.dataset.v);
   openWord(vv.palavras[+c.dataset.i]);
 });
-document.getElementById('m-close').onclick=()=>overlay.classList.remove('open');
+document.getElementById('m-close').onclick=()=>{overlay.classList.remove('open');if(window.speechSynthesis)speechSynthesis.cancel();};
 overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('open')});
 
 /* ---------- Busca / ir para ---------- */
