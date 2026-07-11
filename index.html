@@ -486,11 +486,16 @@ let VOICES=[];
 function loadVoices(){ VOICES=window.speechSynthesis?speechSynthesis.getVoices():[]; }
 if(window.speechSynthesis){ loadVoices(); speechSynthesis.onvoiceschanged=loadVoices; }
 function pickVoice(prefixos){
+  if(!VOICES.length) loadVoices();          // a lista às vezes chega vazia na 1ª vez
   for(const p of prefixos){
     const v=VOICES.find(v=>v.lang&&v.lang.toLowerCase().startsWith(p));
     if(v) return v;
   }
   return null;
+}
+/* tira maqqef, sof pasuq e afins, que a voz lê como ruído */
+function limpaFalaHeb(t){
+  return (t||'').replace(/[\u05BE]/g,' ').replace(/[\u05C0\u05C3\u05C6\u05F3\u05F4׃׀]/g,'').replace(/\s+/g,' ').trim();
 }
 
 /* --- Grego -> grafia erasmiana aproximada (lida por voz espanhola) --- */
@@ -518,30 +523,52 @@ function translitLimpa(tr){
     .replace(/·/g,'').replace(/[ʾʿ’‘']/g,'').replace(/ə/g,'e').trim();
 }
 
-function falar(itens){                            // itens: [{w}] em sequência
-  if(!window.speechSynthesis){ showToast('Este navegador não permite áudio.'); return; }
-  speechSynthesis.cancel();
+/* Monta o texto a ser falado (uma palavra ou o versículo inteiro, contínuo) */
+function montarFala(itens){
   const grego = curBook.idioma==='grc';
   const vNativa = grego ? pickVoice(['el']) : pickVoice(['he','iw']);
   const vEsp    = pickVoice(['es-es','es']);
-  if(grego && !vEsp && !vNativa){ showToast('Nenhuma voz disponível para grego neste aparelho.'); return; }
-  if(!grego && !vNativa && !vEsp){ showToast('Nenhuma voz de hebraico instalada neste aparelho.'); return; }
+  let voz, lang, partes;
+  if(grego){
+    if(vEsp){ voz=vEsp; lang='es-ES'; partes=itens.map(w=>erasmiano(w.heb)); }
+    else if(vNativa){ voz=vNativa; lang='el-GR'; partes=itens.map(w=>w.heb); }
+  }else{
+    if(vNativa){ voz=vNativa; lang='he-IL'; partes=itens.map(w=>limpaFalaHeb(w.heb)); }
+    else if(vEsp){ voz=vEsp; lang='es-ES'; partes=itens.map(w=>translitLimpa(w.tr)); }
+  }
+  if(!voz) return null;
+  const texto = partes.filter(Boolean).join(' ').replace(/\s+/g,' ').trim();  // fala contínua
+  return texto ? {texto,voz,lang} : null;
+}
 
-  itens.forEach((w,i)=>{
-    let texto, voz, lang;
-    if(grego){
-      if(vEsp){ texto=erasmiano(w.heb); voz=vEsp; lang='es-ES'; }   // erasmiana
-      else    { texto=w.heb;            voz=vNativa; lang='el-GR'; }
-    }else{
-      if(vNativa){ texto=w.heb;              voz=vNativa; lang='he-IL'; }
-      else       { texto=translitLimpa(w.tr); voz=vEsp;    lang='es-ES'; }
-    }
-    if(!texto) return;
-    const u=new SpeechSynthesisUtterance(texto);
-    if(voz) u.voice=voz;
-    u.lang=lang; u.rate=0.85; u.pitch=1;
-    speechSynthesis.speak(u);
-  });
+let ultimaFala=0;
+function falar(itens){
+  const S=window.speechSynthesis;
+  if(!S){ showToast('Este navegador não permite áudio.'); return; }
+  const f=montarFala(itens);
+  if(!f){ showToast(curBook.idioma==='grc'?'Nenhuma voz disponível para grego.':'Nenhuma voz de hebraico instalada neste aparelho.'); return; }
+
+  S.cancel();
+  if(S.paused) S.resume();              // destrava se o motor ficou preso
+
+  const disparar=()=>{
+    const u=new SpeechSynthesisUtterance(f.texto);
+    u.voice=f.voz; u.lang=f.lang; u.rate=0.85; u.pitch=1; u.volume=1;
+    u.onerror=()=>{ try{S.cancel();}catch(e){} };
+    // “Mantém vivo”: alguns navegadores pausam sozinhos em falas longas
+    const keep=setInterval(()=>{ if(S.speaking){ S.pause(); S.resume(); } else clearInterval(keep); },9000);
+    u.onend=()=>clearInterval(keep);
+    S.speak(u);
+    // Se em 300ms nada começou, tenta uma vez mais (contorna o travamento)
+    const t0=Date.now(); ultimaFala=t0;
+    setTimeout(()=>{
+      if(ultimaFala===t0 && !S.speaking && !S.pending){
+        try{ S.cancel(); S.resume(); S.speak(new SpeechSynthesisUtterance(f.texto)); }catch(e){}
+      }
+    },300);
+  };
+  // pequeno intervalo após o cancel() — sem isso, Safari/Chrome engasgam
+  setTimeout(disparar, 90);
 }
 function avisoVoz(){
   const grego = curBook.idioma==='grc';
