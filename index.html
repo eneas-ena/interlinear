@@ -55,7 +55,10 @@
   .navarrow:hover{transform:scale(1.15)}
   .navarrow:disabled{opacity:.3;cursor:default}
 
-  .section-title{text-align:center;margin:26px auto 4px;}
+  .section-title{text-align:center;margin:34px auto 6px;position:relative}
+  .section-title::before{content:"";display:block;width:80px;height:1px;margin:0 auto 14px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+  body.mobile .verse:not(.active)+.section-title,body.mobile .section-title{display:none}
+  body.mobile .section-title.vis{display:block}
   .section-title .kicker{font-family:"Cinzel",serif;font-size:11px;letter-spacing:.34em;color:var(--gold);text-transform:uppercase;display:block;margin-bottom:8px;}
   .section-title h2{font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:600;font-size:clamp(24px,4vw,34px);margin:0;color:var(--ink);}
   .xrefs{text-align:center;color:var(--muted);font-style:italic;font-size:17px;margin:4px 0 0;}
@@ -288,7 +291,7 @@
 
     <div class="home-foot">
       Texto original e análise morfológica: STEPBible (Tyndale House, Cambridge), licença CC BY 4.0.<br>Referências cruzadas: OpenBible.info, a partir do Treasury of Scripture Knowledge (domínio público), licença CC BY.
-      <span class="src">Traduções em português e definições do léxico geradas com IA e revisadas — para estudo pessoal.</span>
+      <span class="src">Traduções em português, léxico e títulos de seção gerados com IA e revisados por Enéas Araújo — para estudo pessoal.</span>
     </div>
   </div>
 
@@ -327,9 +330,6 @@
     <h1 id="ch-title" title="Buscar / ir para">Gênesis 1</h1>
     <button class="navarrow" id="ch-next">&#9654;</button>
   </nav>
-
-  <div class="section-title"><span class="kicker">Passagem paralela</span><h2 id="sec-title">A Criação</h2></div>
-  <p class="xrefs" id="xrefs">(<a href="#" data-jump="joh">João 1:1–5</a>; <a href="#" data-jump="heb">Hebreus 11:1–3</a>)</p>
   <div class="rule"></div>
 
   <main id="text"></main>
@@ -507,9 +507,6 @@ function autoReading(pal){
 async function render(cap){
   curCap=cap; chTitle.textContent=curBook.nome+" "+cap;
   document.body.classList.toggle('grc', curBook.idioma==='grc');
-  const isGen1 = curBook.livro==='Gen' && cap===1;
-  document.querySelector('.section-title').style.display = isGen1?'block':'none';
-  document.getElementById('xrefs').style.display = isGen1?'block':'none';
   textEl.innerHTML=`<div class="placeholder"><span class="big">Gênesis ${cap}</span>Carregando…</div>`;
   try{ await ensureChapter(cap); }catch(e){}
   if(cap!==curCap) return;               // usuário já mudou de capítulo
@@ -539,6 +536,7 @@ async function render(cap){
   buildVerseGrid();
   updateChapNav();
   salvarPosicao();
+  carregaSecoes(cap).then(m=>{ if(cap===curCap) pintaSecoes(m); });
   carregaXrefs(cap).then(m=>{ if(cap===curCap) pintaXrefs(m); });
   if(document.body.classList.contains('mobile')){ cur=0; setupPager(); }
 }
@@ -724,6 +722,30 @@ function avisoVoz(){
   return '';
 }
 
+/* ============ Títulos de seção (perícopes) ============ */
+const SEC={};
+async function carregaSecoes(cap){
+  const chave=curBook.livro+'|'+cap;
+  if(SEC[chave]) return SEC[chave];
+  const mapa={};
+  try{
+    const url=`${SUPA_URL}/rest/v1/secoes?livro=eq.${curBook.livro}&cap=eq.${cap}&order=vers.asc&select=vers,titulo`;
+    const r=await fetch(url,{headers:{apikey:SUPA_KEY}});
+    if(r.ok){ (await r.json()).forEach(x=>{ mapa[x.vers]=x.titulo; }); }
+  }catch(e){}
+  SEC[chave]=mapa; return mapa;
+}
+function pintaSecoes(mapa){
+  Object.entries(mapa).forEach(([vers,titulo])=>{
+    const sec=document.getElementById(`v-${curCap}-${vers}`);
+    if(!sec || sec.previousElementSibling?.classList?.contains('section-title')) return;
+    const h=document.createElement('div');
+    h.className='section-title';
+    h.innerHTML=`<h2>${esc(titulo)}</h2>`;
+    sec.parentNode.insertBefore(h, sec);
+  });
+}
+
 /* ============ Referências cruzadas ============ */
 const XREF={};                        // cache por capítulo
 function nomeLivro(cod){
@@ -879,7 +901,6 @@ function doRefJump(){
   if(!vv){showToast('Referência não encontrada (Gênesis '+cap+':'+vers+').');return;}
   jumpToVerse(cap,vers); closeSearch();
 }
-document.querySelectorAll('[data-jump]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();showToast('Referências paralelas (João / Hebreus) entram quando carregarmos o NT.');}));
 
 /* ---------- Toggles / tema ---------- */
 document.getElementById('t-translit').addEventListener('click',function(){const on=this.getAttribute('aria-pressed')==='true';this.setAttribute('aria-pressed',String(!on));document.body.classList.toggle('hide-translit',on);});
@@ -909,6 +930,11 @@ let cur=0,verseEls=[];
 function setupPager(){ verseEls=[...textEl.querySelectorAll('.verse')]; if(cur>verseEls.length-1)cur=0; paint(); }
 function paint(){
   verseEls.forEach((el,i)=>el.classList.toggle('active',i===cur));
+  // no celular, mostra o título de seção que pertence ao versículo exibido
+  textEl.querySelectorAll('.section-title').forEach(h=>h.classList.remove('vis'));
+  const ativo=verseEls[cur];
+  if(ativo && ativo.previousElementSibling?.classList?.contains('section-title'))
+    ativo.previousElementSibling.classList.add('vis');
   if(verseEls[cur]){ pCount.textContent=curBook.nome+' '+curCap+':'+verseEls[cur].dataset.verse; window.scrollTo({top:0}); }
   pPrev.disabled=cur===0; pNext.disabled=cur===verseEls.length-1;
 }
