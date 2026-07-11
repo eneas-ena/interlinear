@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InterTextus — Bíblia Interlinear</title>
+<meta name="description" content="Bíblia interlinear em português: hebraico, grego, transliteração, Strong e análise gramatical.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0F1B33">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="InterTextus">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Frank+Ruhl+Libre:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F1B33;--gold:#C9A227;--paper:#FAF7F0;--card:#FFFFFF;--ink:#0F1B33;
+    --muted:#6B6456;--line:#E7E0D1;--gold-soft:rgba(201,162,39,.12);
+    --shadow:0 1px 2px rgba(15,27,51,.05),0 8px 24px rgba(15,27,51,.06);
+    --shadow-hi:0 2px 6px rgba(15,27,51,.08),0 14px 34px rgba(15,27,51,.12);--radius:14px;
+  }
+  [data-theme="dark"]{
+    --navy:#0B1526;--gold:#D8B24A;--paper:#0B1526;--card:#12203C;--ink:#F3EFE4;
+    --muted:#A9A28E;--line:#25355A;--gold-soft:rgba(216,178,74,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35);
+    --shadow-hi:0 2px 8px rgba(0,0,0,.4),0 16px 40px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:"Cormorant Garamond",Georgia,serif;
+    -webkit-font-smoothing:antialiased;transition:background .3s,color .3s;padding-bottom:64px;}
+
+  .topbar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--paper) 82%,transparent);
+    backdrop-filter:saturate(1.2) blur(10px);border-bottom:1px solid var(--line);}
+  .topbar-inner{max-width:1180px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand-title{font-family:"Cinzel",serif;font-weight:600;font-size:15px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .pill{font-family:"Cinzel",serif;font-size:11px;letter-spacing:.05em;padding:7px 12px;border-radius:999px;cursor:pointer;
+    border:1px solid var(--line);background:transparent;color:var(--muted);transition:all .18s;user-select:none;white-space:nowrap;}
+  .pill:hover{border-color:var(--gold);color:var(--ink)}
+  .pill[aria-pressed="true"]{background:var(--navy);color:#F5EED8;border-color:var(--navy);}
+  [data-theme="dark"] .pill[aria-pressed="true"]{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+  .icon-btn{width:38px;height:38px;border-radius:999px;border:1px solid var(--line);background:transparent;cursor:pointer;
+    display:grid;place-items:center;color:var(--muted);transition:all .18s;}
+  .icon-btn:hover{border-color:var(--gold);color:var(--gold)}
+  .icon-btn.accent{border-color:var(--gold);color:var(--gold)}
+
+  .chapter-nav{max-width:1180px;margin:28px auto 0;padding:0 20px;display:flex;align-items:center;justify-content:center;gap:20px;}
+  .chapter-nav h1{font-family:"Cinzel",serif;font-weight:700;font-size:clamp(26px,5vw,40px);margin:0;letter-spacing:.02em;cursor:pointer;}
+  .navarrow{background:transparent;border:none;cursor:pointer;color:var(--gold);font-size:26px;line-height:1;padding:6px 8px;border-radius:8px;transition:transform .15s,opacity .2s;}
+  .navarrow:hover{transform:scale(1.15)}
+  .navarrow:disabled{opacity:.3;cursor:default}
+
+  .section-title{text-align:center;margin:26px auto 4px;}
+  .section-title .kicker{font-family:"Cinzel",serif;font-size:11px;letter-spacing:.34em;color:var(--gold);text-transform:uppercase;display:block;margin-bottom:8px;}
+  .section-title h2{font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:600;font-size:clamp(24px,4vw,34px);margin:0;color:var(--ink);}
+  .xrefs{text-align:center;color:var(--muted);font-style:italic;font-size:17px;margin:4px 0 0;}
+  .xrefs a{color:var(--gold);text-decoration:none;border-bottom:1px dotted var(--gold)}
+  .rule{max-width:220px;margin:22px auto 6px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);position:relative;}
+  .rule::after{content:"✦";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--gold);font-size:12px;background:var(--paper);padding:0 10px;}
+
+  main{max-width:1180px;margin:0 auto;padding:8px 16px 40px}
+  .verse{margin:30px 0 8px;scroll-margin-top:90px}
+  .verse-flow{direction:rtl;display:flex;flex-wrap:wrap;gap:12px;align-items:stretch;justify-content:flex-start;}
+  .vnum{direction:ltr;flex:0 0 auto;align-self:center;width:34px;height:34px;border-radius:999px;display:grid;place-items:center;
+    margin-inline-end:2px;font-family:"Cinzel",serif;font-weight:700;font-size:14px;color:var(--gold);border:1.5px solid var(--gold);background:var(--gold-soft);}
+  .reading{direction:ltr;margin:14px 4px 0;padding:12px 16px;border-inline-start:3px solid var(--gold);background:var(--gold-soft);
+    border-radius:0 10px 10px 0;font-size:20px;line-height:1.5;color:var(--ink);display:none;}
+  body.show-reading .reading{display:block}
+  .reading .rlabel{display:block;font-family:"Cinzel",serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;}
+
+  .word{direction:ltr;flex:0 0 auto;min-width:96px;max-width:150px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:12px 12px 10px;text-align:center;cursor:pointer;box-shadow:var(--shadow);position:relative;
+    transition:transform .16s,box-shadow .16s,border-color .16s;}
+  .word:hover,.word:focus-visible{transform:translateY(-3px);box-shadow:var(--shadow-hi);border-color:var(--gold);outline:none;}
+  .word:focus-visible{box-shadow:var(--shadow-hi),0 0 0 3px var(--gold-soft)}
+  .word.hl{border-color:var(--gold);box-shadow:var(--shadow-hi),0 0 0 3px var(--gold-soft)}
+  .strong{font-family:"Cinzel",serif;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--gold);margin-bottom:6px;display:inline-flex;align-items:center;gap:4px;}
+  .strong::before{content:"⌗";font-size:11px;opacity:.7}
+  .heb{font-family:"Frank Ruhl Libre",serif;direction:rtl;font-size:30px;line-height:1.25;color:var(--ink);margin:2px 0 6px;min-height:38px;font-weight:500;overflow-wrap:break-word}
+  .translit{font-style:italic;color:var(--muted);font-size:16px;line-height:1.2;margin-bottom:6px;overflow-wrap:break-word;word-break:break-word}
+  body.hide-translit .translit{display:none}
+  .gloss{font-size:20px;font-weight:600;color:var(--ink);line-height:1.15;margin-bottom:2px;overflow-wrap:break-word;word-break:break-word;hyphens:auto}
+  .gloss.marker{color:var(--muted);font-weight:500}
+  .gloss-en{font-size:14px;font-style:italic;color:var(--muted);line-height:1.1;margin-top:2px;display:none;overflow-wrap:break-word;word-break:break-word}
+  body.show-en .gloss-en{display:block}
+  .morph{margin-top:8px;padding-top:7px;border-top:1px dashed var(--line);font-family:"Cinzel",serif;font-size:9.5px;letter-spacing:.03em;color:var(--muted);}
+
+  /* Grego: esquerda→direita, fonte serifada clássica */
+  body.grc .verse-flow{direction:ltr}
+  body.grc .heb{direction:ltr;font-family:"Cormorant Garamond","Frank Ruhl Libre",serif;font-size:27px;font-weight:600}
+  body.grc .m-heb{direction:ltr;font-family:"Cormorant Garamond",serif;font-size:38px;font-weight:600;text-align:left}
+  body.grc .vnum{margin-inline-end:2px}
+
+  /* ================= TELA DE ENTRADA ================= */
+  body.home .topbar,body.home .chapter-nav,body.home .section-title,body.home #xrefs,
+  body.home .rule,body.home main,body.home footer,body.home .pager{display:none!important}
+  .home-screen{display:none}
+  body.home .home-screen{display:block}
+  .hero{max-width:940px;margin:0 auto;padding:38px 22px 10px;text-align:center}
+  .hero-icon{width:118px;height:118px;border-radius:26px;margin:0 auto 20px;display:block;
+    box-shadow:0 10px 34px rgba(15,27,51,.28);border:1px solid var(--gold)}
+  .hero h1{font-family:"Cinzel",serif;font-weight:700;font-size:clamp(34px,7vw,52px);margin:0;
+    letter-spacing:.04em;background:linear-gradient(180deg,var(--ink),#3a4c72);-webkit-background-clip:text;background-clip:text}
+  [data-theme="dark"] .hero h1{background:linear-gradient(180deg,var(--gold),#8f7420);-webkit-text-fill-color:transparent}
+  .hero .tag{font-family:"Cinzel",serif;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);margin-top:10px}
+  .hero .hero-verse{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:clamp(18px,2.6vw,22px);
+    color:var(--muted);margin:18px auto 0;max-width:560px;line-height:1.5}
+  .hero .hero-verse b{display:block;font-style:normal;font-weight:500;color:var(--ink);font-size:1.15em;margin-bottom:4px;direction:ltr}
+  .home-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:26px 0 6px}
+  .btn-lg{font-family:"Cinzel",serif;font-size:12px;letter-spacing:.06em;padding:13px 24px;border-radius:999px;cursor:pointer;
+    border:1px solid var(--gold);background:var(--navy);color:#F5EED8;display:inline-flex;align-items:center;gap:8px;transition:transform .14s,box-shadow .18s}
+  [data-theme="dark"] .btn-lg{background:var(--gold);color:var(--navy)}
+  .btn-lg:hover{transform:translateY(-2px);box-shadow:var(--shadow-hi)}
+  .btn-lg.alt{background:transparent;color:var(--ink);border-color:var(--line)}
+  .btn-lg.alt:hover{border-color:var(--gold);color:var(--gold)}
+
+  .home-stats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:22px 0 4px;color:var(--muted);font-size:15px}
+  .home-stats span{background:var(--gold-soft);border-radius:999px;padding:5px 14px}
+
+  .testament{max-width:940px;margin:32px auto 0;padding:0 22px}
+  .testament h2{font-family:"Cinzel",serif;font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);
+    text-align:center;margin:0 0 4px;display:flex;align-items:center;gap:14px;justify-content:center}
+  .testament h2::before,.testament h2::after{content:"";height:1px;flex:1;max-width:120px;background:linear-gradient(90deg,transparent,var(--line))}
+  .testament h2::after{background:linear-gradient(90deg,var(--line),transparent)}
+  .book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;margin:18px 0 6px}
+  .book{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 14px;cursor:pointer;text-align:left;
+    box-shadow:var(--shadow);transition:transform .14s,border-color .16s,box-shadow .16s;display:flex;flex-direction:column;gap:3px}
+  .book:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:var(--shadow-hi)}
+  .book .bn{font-family:"Cormorant Garamond",serif;font-size:19px;font-weight:600;color:var(--ink);line-height:1.15}
+  .book .bc{font-family:"Cinzel",serif;font-size:9.5px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+  .book .bl{position:absolute}
+  .home-foot{text-align:center;color:var(--muted);font-size:14px;font-style:italic;padding:38px 20px 46px;max-width:640px;margin:0 auto;line-height:1.6}
+  .home-foot .src{font-size:13px;opacity:.85;display:block;margin-top:6px}
+  .home-top{position:absolute;top:16px;right:20px;display:flex;gap:8px}
+  @media(max-width:520px){
+    .book-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+    .hero-icon{width:96px;height:96px}
+  }
+
+  /* Botão voltar ao início (na barra) */
+  .home-btn{display:none}
+  body:not(.home) .home-btn{display:grid}
+
+  /* Controle de velocidade */
+  .speed{display:flex;align-items:center;gap:3px;padding:4px 9px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+  .speed:hover{border-color:var(--gold)}
+  .speed>svg{margin-right:3px;flex:0 0 auto}
+  .rate-btn{font-family:"Cinzel",serif;font-size:10px;letter-spacing:.02em;padding:5px 8px;border-radius:999px;
+    border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
+  .rate-btn:hover{color:var(--ink);border-color:var(--line)}
+  .rate-btn.active{background:var(--navy);color:#F5EED8;border-color:var(--navy)}
+  [data-theme="dark"] .rate-btn.active{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+  @media(max-width:640px){.rate-btn{padding:5px 6px;font-size:9.5px}}
+
+  /* Botões de áudio */
+  .spk{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:999px;border:none;background:transparent;
+    color:var(--muted);cursor:pointer;display:grid;place-items:center;opacity:0;transition:opacity .15s,color .15s;padding:0}
+  .word:hover .spk,.word:focus-within .spk{opacity:.75}
+  .spk:hover{color:var(--gold);opacity:1}
+  body.mobile .spk{opacity:.5}
+  .spk-verse{background:transparent;border:1px solid var(--line);border-radius:999px;width:30px;height:30px;
+    display:grid;place-items:center;color:var(--muted);cursor:pointer;flex:0 0 auto;align-self:center;margin-inline-start:2px;transition:all .18s}
+  .spk-verse:hover{border-color:var(--gold);color:var(--gold)}
+  .spk-modal{display:inline-flex;align-items:center;gap:7px;font-family:"Cinzel",serif;font-size:11px;letter-spacing:.06em;
+    padding:8px 14px;border-radius:999px;border:1px solid var(--gold);background:transparent;color:var(--gold);cursor:pointer;margin-top:10px;transition:all .18s}
+  .spk-modal:hover{background:var(--gold);color:var(--navy)}
+
+  .placeholder{text-align:center;padding:80px 20px;color:var(--muted);font-style:italic;font-size:20px}
+  .placeholder .big{font-family:"Cinzel",serif;font-style:normal;font-size:15px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;display:block}
+
+  .overlay{position:fixed;inset:0;background:rgba(11,21,38,.55);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:18px;z-index:50;}
+  .overlay.open{display:flex}
+  .modal{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--gold);border-radius:16px;max-width:440px;width:100%;
+    box-shadow:var(--shadow-hi);padding:26px;position:relative;animation:pop .22s ease;max-height:88vh;overflow:auto;}
+  @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+  .modal .close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;}
+  .modal .close:hover{border-color:var(--gold);color:var(--gold)}
+  .m-strong{font-family:"Cinzel",serif;font-size:12px;letter-spacing:.1em;color:var(--gold)}
+  .m-heb{font-family:"Frank Ruhl Libre",serif;direction:rtl;font-size:44px;line-height:1.2;margin:6px 0 2px;color:var(--ink)}
+  .m-translit{font-style:italic;font-size:20px;color:var(--muted);margin-bottom:14px}
+  .m-row{margin:12px 0;padding-top:12px;border-top:1px solid var(--line)}
+  .m-label{font-family:"Cinzel",serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:4px;}
+  .m-value{font-size:19px;line-height:1.4;color:var(--ink)}
+  .m-note{font-size:16px;font-style:italic;color:var(--muted);margin-top:5px}
+
+  /* Busca */
+  .modal.search h3{font-family:"Cinzel",serif;font-weight:600;font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin:0 0 18px}
+  .modal.search select{width:100%;font-family:"Cormorant Garamond",serif;font-size:18px;padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:var(--paper);color:var(--ink);margin-bottom:14px}
+  .modal.search select:focus{outline:none;border-color:var(--gold)}
+  .ref-input{display:flex;gap:8px;margin-bottom:18px}
+  .ref-input input{flex:1;font-family:"Cormorant Garamond",serif;font-size:20px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);}
+  .ref-input input:focus{outline:none;border-color:var(--gold)}
+  .ref-input button,.go-btn{font-family:"Cinzel",serif;font-size:12px;letter-spacing:.04em;padding:10px 18px;border-radius:10px;cursor:pointer;border:1px solid var(--gold);background:var(--navy);color:#F5EED8;}
+  [data-theme="dark"] .ref-input button,[data-theme="dark"] .go-btn{background:var(--gold);color:var(--navy)}
+  .field-label{font-family:"Cinzel",serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:14px 0 8px;display:block}
+  .chip-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;max-height:180px;overflow:auto;padding:2px}
+  .chip{font-family:"Cinzel",serif;font-size:12px;padding:8px 0;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;text-align:center;transition:all .15s}
+  .chip:hover:not(:disabled){border-color:var(--gold);color:var(--ink)}
+  .chip.active{background:var(--navy);color:#F5EED8;border-color:var(--navy)}
+  [data-theme="dark"] .chip.active{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+  .chip:disabled{opacity:.28;cursor:default}
+  @media(max-width:480px){.chip-grid{grid-template-columns:repeat(6,1fr)}}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#F5EED8;padding:11px 20px;border-radius:999px;
+    font-size:15px;box-shadow:var(--shadow-hi);opacity:0;pointer-events:none;transition:all .25s;z-index:60;border:1px solid var(--gold);}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  footer{text-align:center;color:var(--muted);font-size:14px;font-style:italic;padding:10px 20px 4px;}
+
+  .pager{display:none;position:fixed;left:0;right:0;bottom:0;z-index:30;background:color-mix(in srgb,var(--paper) 88%,transparent);
+    backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));align-items:center;justify-content:space-between;gap:12px;}
+  .pager button{font-family:"Cinzel",serif;font-size:12px;letter-spacing:.04em;padding:9px 16px;border-radius:999px;cursor:pointer;
+    border:1px solid var(--gold);background:var(--navy);color:#F5EED8;display:inline-flex;align-items:center;gap:6px;transition:opacity .2s,transform .12s;}
+  [data-theme="dark"] .pager button{background:var(--gold);color:var(--navy)}
+  .pager button:active{transform:scale(.96)}
+  .pager button:disabled{opacity:.35;cursor:default;background:transparent;color:var(--muted);border-color:var(--line)}
+  .pager .counter{font-family:"Cinzel",serif;font-size:12px;letter-spacing:.08em;color:var(--gold);cursor:pointer}
+  body.mobile .pager{display:flex}
+  body.mobile{padding-bottom:80px}
+  body.mobile .verse{display:none}
+  body.mobile .verse.active{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  body.mobile footer{display:none}
+
+  @media(max-width:520px){
+    .word{min-width:78px;max-width:31vw;padding:10px 8px 8px}
+    .heb{font-size:25px;min-height:32px}.gloss{font-size:17px}.translit{font-size:14px}
+    .brand-title{display:none}.verse-flow{gap:8px}.reading{font-size:18px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body class="home">
+
+  <!-- ===================== TELA DE ENTRADA ===================== -->
+  <div class="home-screen">
+    <div class="home-top">
+      <button class="icon-btn" id="h-theme" title="Alternar tema" aria-label="Tema">
+        <svg id="h-theme-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+
+    <div class="hero">
+      <img src="icone-512.png" alt="InterTextus" class="hero-icon"
+           onerror="this.style.display='none'">
+      <h1>InterTextus</h1>
+      <div class="tag">Bíblia Interlinear</div>
+      <p class="hero-verse">
+        <b>ἐν ἀρχῇ ἦν ὁ λόγος</b>
+        Hebraico · Grego · Transliteração · Strong · Análise gramatical
+      </p>
+      <div class="home-actions">
+        <button class="btn-lg" id="h-continue" style="display:none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 3l14 9-14 9V3z"/></svg>
+          <span id="h-continue-txt">Continuar</span>
+        </button>
+        <button class="btn-lg alt" id="h-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          Buscar passagem
+        </button>
+      </div>
+      <div class="home-stats" id="h-stats"></div>
+    </div>
+
+    <section class="testament" id="h-at" style="display:none">
+      <h2>Antigo Testamento</h2>
+      <div class="book-grid" id="grid-at"></div>
+    </section>
+
+    <section class="testament" id="h-nt" style="display:none">
+      <h2>Novo Testamento</h2>
+      <div class="book-grid" id="grid-nt"></div>
+    </section>
+
+    <div class="home-foot">
+      Texto original e análise morfológica: STEPBible (Tyndale House, Cambridge), licença CC BY 4.0.
+      <span class="src">Traduções em português e definições do léxico geradas com IA e revisadas — para estudo pessoal.</span>
+    </div>
+  </div>
+
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <button class="icon-btn home-btn" id="btn-home" title="Início" aria-label="Voltar ao início">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        </button>
+        <div class="brand-title">InterTextus</div>
+      </div>
+      <div class="controls">
+        <button class="icon-btn accent" id="btn-search" title="Buscar / ir para" aria-label="Buscar">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        </button>
+        <button class="pill" id="t-translit" aria-pressed="true">Transliteração</button>
+        <button class="pill" id="t-en" aria-pressed="false">Inglês</button>
+        <button class="pill" id="t-reading" aria-pressed="false">Leitura</button>
+        <div class="speed" title="Velocidade da leitura — 0× é o normal; os demais vão reduzindo">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+          <button class="rate-btn" data-rate="1">0×</button>
+          <button class="rate-btn" data-rate="0.6">−0,5×</button>
+          <button class="rate-btn" data-rate="0.4">−1×</button>
+          <button class="rate-btn" data-rate="0.25">−1,5×</button>
+        </div>
+        <button class="icon-btn" id="t-theme" title="Alternar tema" aria-label="Tema">
+          <svg id="theme-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="chapter-nav">
+    <button class="navarrow" id="ch-prev">&#9664;</button>
+    <h1 id="ch-title" title="Buscar / ir para">Gênesis 1</h1>
+    <button class="navarrow" id="ch-next">&#9654;</button>
+  </nav>
+
+  <div class="section-title"><span class="kicker">Passagem paralela</span><h2 id="sec-title">A Criação</h2></div>
+  <p class="xrefs" id="xrefs">(<a href="#" data-jump="joh">João 1:1–5</a>; <a href="#" data-jump="heb">Hebreus 11:1–3</a>)</p>
+  <div class="rule"></div>
+
+  <main id="text"></main>
+  <footer id="foot">Toque em qualquer palavra para ver o léxico e a análise gramatical.</footer>
+
+  <div class="pager" id="pager">
+    <button id="p-prev">&#8249; Anterior</button>
+    <span class="counter" id="p-count"></span>
+    <button id="p-next">Próximo &#8250;</button>
+  </div>
+
+  <!-- Modal da palavra -->
+  <div class="overlay" id="overlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-gloss">
+      <button class="close" id="m-close" aria-label="Fechar">&times;</button>
+      <div class="m-strong" id="m-strong"></div>
+      <div class="m-heb" id="m-heb"></div>
+      <div class="m-translit" id="m-translit"></div>
+      <button class="spk-modal" id="m-spk" title="Ouvir">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+        Ouvir
+      </button>
+      <div class="m-note" id="m-spknote" style="font-size:14px"></div>
+      <div class="m-row"><span class="m-label">Tradução</span><div class="m-value" id="m-gloss"></div><div class="m-note" id="m-glossen"></div></div>
+      <div class="m-row"><span class="m-label">Análise gramatical</span><div class="m-value" id="m-morph"></div><div class="m-note" id="m-morphcode"></div></div>
+      <div class="m-row"><span class="m-label">Léxico (Strong)</span><div class="m-value" id="m-def"></div></div>
+    </div>
+  </div>
+
+  <!-- Modal de busca -->
+  <div class="overlay" id="search-overlay">
+    <div class="modal search" role="dialog" aria-modal="true">
+      <button class="close" id="s-close" aria-label="Fechar">&times;</button>
+      <h3>Ir para</h3>
+      <span class="field-label">Livro</span>
+      <select id="book-sel"></select>
+      <div class="ref-input">
+        <input id="ref-text" inputmode="numeric" placeholder="ex.: 1:5" autocomplete="off">
+        <button id="ref-go">Ir</button>
+      </div>
+      <span class="field-label">Capítulo</span>
+      <div class="chip-grid" id="chap-grid"></div>
+      <span class="field-label">Versículo</span>
+      <div class="chip-grid" id="verse-grid"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script id="data" type="application/json">{"livro":"Gênesis","abrev":"Gen","versos":[{"ref":"1:1","cap":1,"vers":1,"palavras":[{"v":1,"n":1,"heb":"בְּרֵאשִׁית","tr":"be·re·Shit","s":"7225","sfull":"H7225G","morph":"HR/Ncfsa","en":"in beginning","pt":"No princípio"},{"v":1,"n":2,"heb":"בָּרָא","tr":"ba·Ra'","s":"1254","sfull":"H1254A","morph":"HVqp3ms","en":"he created","pt":"criou"},{"v":1,"n":3,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":1,"n":4,"heb":"אֵת","tr":"'et","s":"853","sfull":"H0853","morph":"HTo","en":"<obj.>","pt":"—"},{"v":1,"n":5,"heb":"הַשָּׁמַיִם","tr":"ha·sha·Ma·yim","s":"8064","sfull":"H8064","morph":"HTd/Ncmpa","en":"the heavens","pt":"os céus"},{"v":1,"n":6,"heb":"וְאֵת","tr":"ve·'Et","s":"853","sfull":"H0853","morph":"HC/To","en":"and <obj.>","pt":"e —"},{"v":1,"n":7,"heb":"הָאָֽרֶץ׃","tr":"ha·'A·retz","s":"776","sfull":"H0776G","morph":"HTd/Ncfsa","en":"the earth","pt":"a terra"}]},{"ref":"1:2","cap":1,"vers":2,"palavras":[{"v":2,"n":1,"heb":"וְהָאָרֶץ","tr":"ve·ha·'A·retz","s":"776","sfull":"H0776G","morph":"HC/Td/Ncfsa","en":"and the earth","pt":"e a terra"},{"v":2,"n":2,"heb":"הָיְתָה","tr":"ha·ye·Tah","s":"1961","sfull":"H1961","morph":"HVqp3fs","en":"<it> was","pt":"era"},{"v":2,"n":3,"heb":"תֹהוּ","tr":"to·hu","s":"8414","sfull":"H8414","morph":"HNcmsa","en":"formlessness","pt":"sem forma"},{"v":2,"n":4,"heb":"וָבֹהוּ","tr":"va·Vo·hu","s":"922","sfull":"H0922","morph":"HC/Ncmsa","en":"and emptiness","pt":"e vazia"},{"v":2,"n":5,"heb":"וְחֹשֶׁךְ","tr":"ve·Cho·shekh","s":"2822","sfull":"H2822","morph":"HC/Ncmsa","en":"and darkness","pt":"e trevas"},{"v":2,"n":6,"heb":"עַל־","tr":"'al-","s":"5921","sfull":"H5921A","morph":"HR","en":"[was] over","pt":"sobre"},{"v":2,"n":7,"heb":"פְּנֵי","tr":"pe·Nei","s":"6440","sfull":"H6440J","morph":"HNcmpc","en":"[the] surface of","pt":"a face de"},{"v":2,"n":8,"heb":"תְהוֹם","tr":"te·Hom","s":"8415","sfull":"H8415","morph":"HNcfsa","en":"[the] deep","pt":"o abismo"},{"v":2,"n":9,"heb":"וְרוּחַ","tr":"ve·Ru·ach","s":"7307","sfull":"H7307G","morph":"HC/Ncfsc","en":"and [the] spirit of","pt":"e o Espírito de"},{"v":2,"n":10,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":2,"n":11,"heb":"מְרַחֶפֶת","tr":"me·ra·Che·fet","s":"7363","sfull":"H7363B","morph":"HVprfsa","en":"[was] hovering","pt":"pairava"},{"v":2,"n":12,"heb":"עַל־","tr":"'al-","s":"5921","sfull":"H5921A","morph":"HR","en":"over","pt":"sobre"},{"v":2,"n":13,"heb":"פְּנֵי","tr":"pe·Nei","s":"6440","sfull":"H6440J","morph":"HNcmpc","en":"[the] surface of","pt":"a face de"},{"v":2,"n":14,"heb":"הַמָּֽיִם׃","tr":"ha·Ma·yim","s":"4325","sfull":"H4325G","morph":"HTd/Ncmpa","en":"the waters","pt":"as águas"}]},{"ref":"1:3","cap":1,"vers":3,"palavras":[{"v":3,"n":1,"heb":"וַיֹּאמֶר","tr":"vai·Yo·mer","s":"559","sfull":"H0559","morph":"Hc/Vqw3ms","en":"and he said","pt":"e disse"},{"v":3,"n":2,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":3,"n":3,"heb":"יְהִי","tr":"ye·Hi","s":"1961","sfull":"H1961","morph":"HVqj3ms","en":"let it be","pt":"haja"},{"v":3,"n":4,"heb":"אוֹר","tr":"'or","s":"216","sfull":"H0216","morph":"HNcfsa","en":"light","pt":"luz"},{"v":3,"n":5,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and there was","pt":"e houve"},{"v":3,"n":6,"heb":"אֽוֹר׃","tr":"'or","s":"216","sfull":"H0216","morph":"HNcfsa","en":"light","pt":"luz"}]},{"ref":"1:4","cap":1,"vers":4,"palavras":[{"v":4,"n":1,"heb":"וַיַּרְא","tr":"vai·Yar'","s":"7200","sfull":"H7200G","morph":"Hc/Vqw3ms","en":"and he saw","pt":"e viu"},{"v":4,"n":2,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":4,"n":3,"heb":"אֶת־","tr":"'et-","s":"853","sfull":"H0853","morph":"HTo","en":"<obj.>","pt":"—"},{"v":4,"n":4,"heb":"הָאוֹר","tr":"ha·'Or","s":"216","sfull":"H0216","morph":"HTd/Ncfsa","en":"the light","pt":"a luz"},{"v":4,"n":5,"heb":"כִּי־","tr":"ki-","s":"3588","sfull":"H3588A","morph":"HTc","en":"that","pt":"que"},{"v":4,"n":6,"heb":"טוֹב","tr":"Tov","s":"2895","sfull":"H2895","morph":"HVqp3ms","en":"[it was] good","pt":"era bom"},{"v":4,"n":7,"heb":"וַיַּבְדֵּל","tr":"vai·yav·Del","s":"914","sfull":"H0914","morph":"Hc/Vhw3ms","en":"and he separated","pt":"e separou"},{"v":4,"n":8,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":4,"n":9,"heb":"בֵּין","tr":"bein","s":"996","sfull":"H0996G","morph":"HAcmsc","en":"between","pt":"entre"},{"v":4,"n":10,"heb":"הָאוֹר","tr":"ha·'Or","s":"216","sfull":"H0216","morph":"HTd/Ncfsa","en":"the light","pt":"a luz"},{"v":4,"n":11,"heb":"וּבֵין","tr":"u·Vein","s":"996","sfull":"H0996G","morph":"HC/Acmsc","en":"and between","pt":"e entre"},{"v":4,"n":12,"heb":"הַחֹֽשֶׁךְ׃","tr":"ha·Cho·shekh","s":"2822","sfull":"H2822","morph":"HTd/Ncmsa","en":"the darkness","pt":"as trevas"}]},{"ref":"1:5","cap":1,"vers":5,"palavras":[{"v":5,"n":1,"heb":"וַיִּקְרָא","tr":"vai·yik·Ra'","s":"7121","sfull":"H7121H","morph":"Hc/Vqw3ms","en":"and he called","pt":"e chamou"},{"v":5,"n":2,"heb":"אֱלֹהִים׀","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":5,"n":3,"heb":"לָאוֹר","tr":"la·'Or","s":"216","sfull":"H0216","morph":"HRd/Ncfsa","en":"<to> the light","pt":"à luz"},{"v":5,"n":4,"heb":"יוֹם","tr":"Yom","s":"3117","sfull":"H3117G","morph":"HNcmsa","en":"day","pt":"dia"},{"v":5,"n":5,"heb":"וְלַחֹשֶׁךְ","tr":"ve·la·Cho·shekh","s":"2822","sfull":"H2822","morph":"HC/Rd/Ncmsa","en":"and <to> the darkness","pt":"e às trevas"},{"v":5,"n":6,"heb":"קָרָא","tr":"Ka·ra'","s":"7121","sfull":"H7121H","morph":"HVqp3ms","en":"he called","pt":"chamou"},{"v":5,"n":7,"heb":"לָיְלָה","tr":"Lai·lah","s":"3915","sfull":"H3915","morph":"HNcmsa","en":"night","pt":"noite"},{"v":5,"n":8,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and there was","pt":"e houve"},{"v":5,"n":9,"heb":"עֶרֶב","tr":"'E·rev","s":"6153","sfull":"H6153","morph":"HNcmsa","en":"evening","pt":"tarde"},{"v":5,"n":10,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and there was","pt":"e houve"},{"v":5,"n":11,"heb":"בֹקֶר","tr":"Vo·ker","s":"1242","sfull":"H1242","morph":"HNcmsa","en":"morning","pt":"manhã"},{"v":5,"n":12,"heb":"יוֹם","tr":"Yom","s":"3117","sfull":"H3117G","morph":"HNcmsa","en":"day","pt":"dia"},{"v":5,"n":13,"heb":"אֶחָֽד׃ פ","tr":"'e·Chad","s":"259","sfull":"H0259","morph":"HAcfsa","en":"one","pt":"um"}]},{"ref":"1:6","cap":1,"vers":6,"palavras":[{"v":6,"n":1,"heb":"וַיֹּאמֶר","tr":"vai·Yo·mer","s":"559","sfull":"H0559","morph":"Hc/Vqw3ms","en":"and he said","pt":"e disse"},{"v":6,"n":2,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":6,"n":3,"heb":"יְהִי","tr":"ye·Hi","s":"1961","sfull":"H1961","morph":"HVqj3ms","en":"let it be","pt":"haja"},{"v":6,"n":4,"heb":"רָקִיעַ","tr":"ra·Ki·a'","s":"7549","sfull":"H7549","morph":"HNcmsa","en":"a firmament","pt":"um firmamento"},{"v":6,"n":5,"heb":"בְּתוֹךְ","tr":"be·Tokh","s":"8432","sfull":"H8432","morph":"HR/Ncmsc","en":"in [the] middle of","pt":"no meio de"},{"v":6,"n":6,"heb":"הַמָּיִם","tr":"ha·Ma·yim","s":"4325","sfull":"H4325G","morph":"HTd/Ncmpa","en":"the waters","pt":"as águas"},{"v":6,"n":7,"heb":"וִיהִי","tr":"vi·Hi","s":"1961","sfull":"H1961","morph":"HC/Vqj3ms","en":"and let it be","pt":"e haja"},{"v":6,"n":8,"heb":"מַבְדִּיל","tr":"mav·Dil","s":"914","sfull":"H0914","morph":"HVhrmsa","en":"separating","pt":"que separa"},{"v":6,"n":9,"heb":"בֵּין","tr":"bein","s":"996","sfull":"H0996G","morph":"HAcmsc","en":"between","pt":"entre"},{"v":6,"n":10,"heb":"מַיִם","tr":"Ma·yim","s":"4325","sfull":"H4325G","morph":"HNcmpa","en":"waters","pt":"águas"},{"v":6,"n":11,"heb":"לָמָֽיִם׃","tr":"la·Ma·yim","s":"4325","sfull":"H4325G","morph":"HR/Ncmpa","en":"to waters","pt":"às águas"}]},{"ref":"1:7","cap":1,"vers":7,"palavras":[{"v":7,"n":1,"heb":"וַיַּעַשׂ","tr":"vai·Ya·'as","s":"6213","sfull":"H6213H","morph":"Hc/Vqw3ms","en":"and he made","pt":"e fez"},{"v":7,"n":2,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":7,"n":3,"heb":"אֶת־","tr":"'et-","s":"853","sfull":"H0853","morph":"HTo","en":"<obj.>","pt":"—"},{"v":7,"n":4,"heb":"הָרָקִיעַ","tr":"ha·ra·ki·a'","s":"7549","sfull":"H7549","morph":"HTd/Ncmsa","en":"the firmament","pt":"o firmamento"},{"v":7,"n":5,"heb":"וַיַּבְדֵּל","tr":"vai·yav·Del","s":"914","sfull":"H0914","morph":"Hc/Vhw3ms","en":"and he separated","pt":"e separou"},{"v":7,"n":6,"heb":"בֵּין","tr":"bein","s":"996","sfull":"H0996G","morph":"HAcmsc","en":"between","pt":"entre"},{"v":7,"n":7,"heb":"הַמַּיִם","tr":"ha·Ma·yim","s":"4325","sfull":"H4325G","morph":"HTd/Ncmpa","en":"the waters","pt":"as águas"},{"v":7,"n":8,"heb":"אֲשֶׁר","tr":"'a·Sher","s":"834","sfull":"H0834A","morph":"HTr","en":"which","pt":"que"},{"v":7,"n":9,"heb":"מִתַּחַת","tr":"mi·Ta·chat","s":"8478","sfull":"H8478G","morph":"HR/Ncmsc","en":"[were] from under","pt":"debaixo"},{"v":7,"n":10,"heb":"לָרָקִיעַ","tr":"la·ra·Ki·a'","s":"7549","sfull":"H7549","morph":"HRd/Ncmsa","en":"to the firmament","pt":"ao firmamento"},{"v":7,"n":11,"heb":"וּבֵין","tr":"u·Vein","s":"996","sfull":"H0996G","morph":"HC/Acmsc","en":"and between","pt":"e entre"},{"v":7,"n":12,"heb":"הַמַּיִם","tr":"ha·Ma·yim","s":"4325","sfull":"H4325G","morph":"HTd/Ncmpa","en":"the waters","pt":"as águas"},{"v":7,"n":13,"heb":"אֲשֶׁר","tr":"'a·Sher","s":"834","sfull":"H0834A","morph":"HTr","en":"which","pt":"que"},{"v":7,"n":14,"heb":"מֵעַל","tr":"me·'Al","s":"5921","sfull":"H5921A","morph":"HR/R","en":"[were] from <above>","pt":"de cima"},{"v":7,"n":15,"heb":"לָרָקִיעַ","tr":"la·ra·Ki·a'","s":"7549","sfull":"H7549","morph":"HRd/Ncmsa","en":"<to> the firmament","pt":"ao firmamento"},{"v":7,"n":16,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and it was","pt":"e foi"},{"v":7,"n":17,"heb":"כֵֽן׃","tr":"Khen","s":"3651","sfull":"H3651C","morph":"HD","en":"so","pt":"assim"}]},{"ref":"1:8","cap":1,"vers":8,"palavras":[{"v":8,"n":1,"heb":"וַיִּקְרָא","tr":"vai·yik·Ra'","s":"7121","sfull":"H7121H","morph":"Hc/Vqw3ms","en":"and he called","pt":"e chamou"},{"v":8,"n":2,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":8,"n":3,"heb":"לָֽרָקִיעַ","tr":"la·ra·Ki·a'","s":"7549","sfull":"H7549","morph":"HRd/Ncmsa","en":"<to> the firmament","pt":"ao firmamento"},{"v":8,"n":4,"heb":"שָׁמָיִם","tr":"sha·Ma·yim","s":"8064","sfull":"H8064","morph":"HNcmpa","en":"heaven","pt":"céu"},{"v":8,"n":5,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and there was","pt":"e houve"},{"v":8,"n":6,"heb":"עֶרֶב","tr":"'E·rev","s":"6153","sfull":"H6153","morph":"HNcmsa","en":"evening","pt":"tarde"},{"v":8,"n":7,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and there was","pt":"e houve"},{"v":8,"n":8,"heb":"בֹקֶר","tr":"Vo·ker","s":"1242","sfull":"H1242","morph":"HNcmsa","en":"morning","pt":"manhã"},{"v":8,"n":9,"heb":"יוֹם","tr":"Yom","s":"3117","sfull":"H3117G","morph":"HNcmsa","en":"a day","pt":"um dia"},{"v":8,"n":10,"heb":"שֵׁנִֽי׃ פ","tr":"she·Ni","s":"8145","sfull":"H8145","morph":"HAomsa","en":"second","pt":"segundo"}]},{"ref":"1:9","cap":1,"vers":9,"palavras":[{"v":9,"n":1,"heb":"וַיֹּאמֶר","tr":"vai·Yo·mer","s":"559","sfull":"H0559","morph":"Hc/Vqw3ms","en":"and he said","pt":"e disse"},{"v":9,"n":2,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":9,"n":3,"heb":"יִקָּווּ","tr":"yi·ka·Vu","s":"6960","sfull":"H6960B","morph":"HVNi3mp","en":"let them gather","pt":"ajuntem-se"},{"v":9,"n":4,"heb":"הַמַּיִם","tr":"ha·Ma·yim","s":"4325","sfull":"H4325G","morph":"HTd/Ncmpa","en":"the waters","pt":"as águas"},{"v":9,"n":5,"heb":"מִתַּחַת","tr":"mi·Ta·chat","s":"8478","sfull":"H8478G","morph":"HR/Ncmsc","en":"from under","pt":"debaixo de"},{"v":9,"n":6,"heb":"הַשָּׁמַיִם","tr":"ha·sha·Ma·yim","s":"8064","sfull":"H8064","morph":"HTd/Ncmpa","en":"the heavens","pt":"os céus"},{"v":9,"n":7,"heb":"אֶל־","tr":"'El-","s":"413","sfull":"H0413","morph":"HR","en":"to","pt":"para"},{"v":9,"n":8,"heb":"מָקוֹם","tr":"ma·Kom","s":"4725","sfull":"H4725","morph":"HNcmsa","en":"a place","pt":"um lugar"},{"v":9,"n":9,"heb":"אֶחָד","tr":"'e·Chad","s":"259","sfull":"H0259","morph":"HAcfsa","en":"one","pt":"um"},{"v":9,"n":10,"heb":"וְתֵרָאֶה","tr":"ve·te·ra·'Eh","s":"7200","sfull":"H7200G","morph":"HC/VNu3fs","en":"and let it appear","pt":"e apareça"},{"v":9,"n":11,"heb":"הַיַּבָּשָׁה","tr":"hai·ya·ba·Shah","s":"3004","sfull":"H3004","morph":"HTd/Ncfsa","en":"the dry ground","pt":"a terra seca"},{"v":9,"n":12,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and it was","pt":"e foi"},{"v":9,"n":13,"heb":"כֵֽן׃","tr":"Khen","s":"3651","sfull":"H3651C","morph":"HD","en":"so","pt":"assim"}]},{"ref":"1:10","cap":1,"vers":10,"palavras":[{"v":10,"n":1,"heb":"וַיִּקְרָא","tr":"vai·yik·Ra'","s":"7121","sfull":"H7121H","morph":"Hc/Vqw3ms","en":"and he called","pt":"e chamou"},{"v":10,"n":2,"heb":"אֱלֹהִים׀","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":10,"n":3,"heb":"לַיַּבָּשָׁה","tr":"lai·ya·ba·Shah","s":"3004","sfull":"H3004","morph":"HRd/Ncfsa","en":"<to> the dry ground","pt":"à terra seca"},{"v":10,"n":4,"heb":"אֶרֶץ","tr":"'E·retz","s":"776","sfull":"H0776G","morph":"HNcfsa","en":"earth","pt":"terra"},{"v":10,"n":5,"heb":"וּלְמִקְוֵה","tr":"u·le·mik·Veh","s":"4723","sfull":"H4723C","morph":"HC/R/Ncmsc","en":"and <to> [the] collection of","pt":"e ao ajuntamento de"},{"v":10,"n":6,"heb":"הַמַּיִם","tr":"ha·Ma·yim","s":"4325","sfull":"H4325G","morph":"HTd/Ncmpa","en":"the waters","pt":"as águas"},{"v":10,"n":7,"heb":"קָרָא","tr":"ka·Ra'","s":"7121","sfull":"H7121H","morph":"HVqp3ms","en":"he called","pt":"chamou"},{"v":10,"n":8,"heb":"יַמִּים","tr":"ya·Mim","s":"3220","sfull":"H3220G","morph":"HNcmpa","en":"seas","pt":"mares"},{"v":10,"n":9,"heb":"וַיַּרְא","tr":"vai·Yar'","s":"7200","sfull":"H7200G","morph":"Hc/Vqw3ms","en":"and he saw","pt":"e viu"},{"v":10,"n":10,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":10,"n":11,"heb":"כִּי־","tr":"ki-","s":"3588","sfull":"H3588A","morph":"HTc","en":"that","pt":"que"},{"v":10,"n":12,"heb":"טֽוֹב׃","tr":"Tov","s":"2895","sfull":"H2895","morph":"HVqp3ms","en":"[it was] good","pt":"era bom"}]},{"ref":"1:11","cap":1,"vers":11,"palavras":[{"v":11,"n":1,"heb":"וַיֹּאמֶר","tr":"vai·Yo·mer","s":"559","sfull":"H0559","morph":"Hc/Vqw3ms","en":"and he said","pt":"e disse"},{"v":11,"n":2,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":11,"n":3,"heb":"תַּֽדְשֵׁא","tr":"tad·She'","s":"1876","sfull":"H1876","morph":"HVhj3fs","en":"let it sprout","pt":"brote"},{"v":11,"n":4,"heb":"הָאָרֶץ","tr":"ha·'A·retz","s":"776","sfull":"H0776G","morph":"HTd/Ncfsa","en":"the earth","pt":"a terra"},{"v":11,"n":5,"heb":"דֶּשֶׁא","tr":"De·she'","s":"1877","sfull":"H1877","morph":"HNcmsa","en":"vegetation","pt":"relva"},{"v":11,"n":6,"heb":"עֵשֶׂב","tr":"'E·sev","s":"6212","sfull":"H6212","morph":"HNcmsa","en":"plant[s]","pt":"as plantas"},{"v":11,"n":7,"heb":"מַזְרִיעַ","tr":"maz·Ri·a'","s":"2232","sfull":"H2232","morph":"HVhrmsa","en":"[which] bears seed","pt":"que dá semente"},{"v":11,"n":8,"heb":"זֶרַע","tr":"Ze·ra'","s":"2233","sfull":"H2233G","morph":"HNcmsa","en":"seed","pt":"semente"},{"v":11,"n":9,"heb":"עֵץ","tr":"'etz","s":"6086","sfull":"H6086H","morph":"HNcmsc","en":"tree[s] of","pt":"as árvores de"},{"v":11,"n":10,"heb":"פְּרִי","tr":"pe·Ri","s":"6529","sfull":"H6529","morph":"HNcmsa","en":"fruit","pt":"fruto"},{"v":11,"n":11,"heb":"עֹשֶׂה","tr":"'O·seh","s":"6213","sfull":"H6213H","morph":"HVqrmsa","en":"producing","pt":"que produz"},{"v":11,"n":12,"heb":"פְּרִי","tr":"pe·Ri","s":"6529","sfull":"H6529","morph":"HNcmsa","en":"fruit","pt":"fruto"},{"v":11,"n":13,"heb":"לְמִינוֹ","tr":"le·mi·No","s":"4327","sfull":"H4327","morph":"HR/Ncmsc/Sp3ms","en":"to kind its","pt":"segundo a sua espécie"},{"v":11,"n":14,"heb":"אֲשֶׁר","tr":"'a·Sher","s":"834","sfull":"H0834A","morph":"HTr","en":"which","pt":"que"},{"v":11,"n":15,"heb":"זַרְעוֹ־","tr":"zar·'ov-","s":"2233","sfull":"H2233G","morph":"HNcmsc/Sp3ms","en":"seed its","pt":"sua semente"},{"v":11,"n":16,"heb":"בוֹ","tr":"vo","s":"9033","sfull":"H9033","morph":"HRd/Sp3ms","en":"[is] in <the> it","pt":"nele"},{"v":11,"n":17,"heb":"עַל־","tr":"'al-","s":"5921","sfull":"H5921A","morph":"HR","en":"on","pt":"sobre"},{"v":11,"n":18,"heb":"הָאָרֶץ","tr":"ha·'A·retz","s":"776","sfull":"H0776G","morph":"HTd/Ncfsa","en":"the earth","pt":"a terra"},{"v":11,"n":19,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and it was","pt":"e foi"},{"v":11,"n":20,"heb":"כֵֽן׃","tr":"Khen","s":"3651","sfull":"H3651C","morph":"HD","en":"so","pt":"assim"}]},{"ref":"1:12","cap":1,"vers":12,"palavras":[{"v":12,"n":1,"heb":"וַתּוֹצֵא","tr":"va·to·Tze'","s":"3318","sfull":"H3318M","morph":"Hc/Vhw3fs","en":"and <it> brought forth","pt":"e produziu"},{"v":12,"n":2,"heb":"הָאָרֶץ","tr":"ha·'A·retz","s":"776","sfull":"H0776G","morph":"HTd/Ncfsa","en":"the earth","pt":"a terra"},{"v":12,"n":3,"heb":"דֶּשֶׁא","tr":"De·she'","s":"1877","sfull":"H1877","morph":"HNcmsa","en":"vegetation","pt":"relva"},{"v":12,"n":4,"heb":"עֵשֶׂב","tr":"'E·sev","s":"6212","sfull":"H6212","morph":"HNcmsa","en":"plant[s]","pt":"as plantas"},{"v":12,"n":5,"heb":"מַזְרִיעַ","tr":"maz·Ri·a'","s":"2232","sfull":"H2232","morph":"HVhrmsa","en":"[which] bears seed","pt":"que dá semente"},{"v":12,"n":6,"heb":"זֶרַע","tr":"ze·ra'","s":"2233","sfull":"H2233G","morph":"HNcmsa","en":"seed","pt":"semente"},{"v":12,"n":7,"heb":"לְמִינֵהוּ","tr":"le·mi·Ne·hu","s":"4327","sfull":"H4327","morph":"HR/Ncmsc/Sp3ms","en":"to kind its","pt":"segundo a sua espécie"},{"v":12,"n":8,"heb":"וְעֵץ","tr":"ve·'Etz","s":"6086","sfull":"H6086H","morph":"HC/Ncmsa","en":"and tree[s]","pt":"e as árvores"},{"v":12,"n":9,"heb":"עֹֽשֶׂה־","tr":"'o·seh-","s":"6213","sfull":"H6213H","morph":"HVqrmsa","en":"producing","pt":"que produz"},{"v":12,"n":10,"heb":"פְּרִי","tr":"pe·Ri","s":"6529","sfull":"H6529","morph":"HNcmsa","en":"fruit","pt":"fruto"},{"v":12,"n":11,"heb":"אֲשֶׁר","tr":"'a·Sher","s":"834","sfull":"H0834A","morph":"HTr","en":"which","pt":"que"},{"v":12,"n":12,"heb":"זַרְעוֹ־","tr":"zar·'ov-","s":"2233","sfull":"H2233G","morph":"HNcmsc/Sp3ms","en":"seed its","pt":"sua semente"},{"v":12,"n":13,"heb":"בוֹ","tr":"vo","s":"9033","sfull":"H9033","morph":"HRd/Sp3ms","en":"[was] in <the> it","pt":"nele"},{"v":12,"n":14,"heb":"לְמִינֵהוּ","tr":"le·mi·Ne·hu","s":"4327","sfull":"H4327","morph":"HR/Ncmsc/Sp3ms","en":"to kind its","pt":"segundo a sua espécie"},{"v":12,"n":15,"heb":"וַיַּרְא","tr":"vai·Yar'","s":"7200","sfull":"H7200G","morph":"Hc/Vqw3ms","en":"and he saw","pt":"e viu"},{"v":12,"n":16,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":12,"n":17,"heb":"כִּי־","tr":"ki-","s":"3588","sfull":"H3588A","morph":"HTc","en":"that","pt":"que"},{"v":12,"n":18,"heb":"טֽוֹב׃","tr":"Tov","s":"2895","sfull":"H2895","morph":"HVqp3ms","en":"[it was] good","pt":"era bom"}]},{"ref":"1:13","cap":1,"vers":13,"palavras":[{"v":13,"n":1,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and there was","pt":"e houve"},{"v":13,"n":2,"heb":"עֶרֶב","tr":"'E·rev","s":"6153","sfull":"H6153","morph":"HNcmsa","en":"evening","pt":"tarde"},{"v":13,"n":3,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and there was","pt":"e houve"},{"v":13,"n":4,"heb":"בֹקֶר","tr":"Vo·ker","s":"1242","sfull":"H1242","morph":"HNcmsa","en":"morning","pt":"manhã"},{"v":13,"n":5,"heb":"יוֹם","tr":"Yom","s":"3117","sfull":"H3117G","morph":"HNcmsa","en":"a day","pt":"um dia"},{"v":13,"n":6,"heb":"שְׁלִישִֽׁי׃ פ","tr":"she·li·Shi","s":"7992","sfull":"H7992","morph":"HAomsa","en":"third","pt":"terceiro"}]},{"ref":"1:14","cap":1,"vers":14,"palavras":[{"v":14,"n":1,"heb":"וַיֹּאמֶר","tr":"vai·Yo·mer","s":"559","sfull":"H0559","morph":"Hc/Vqw3ms","en":"and he said","pt":"e disse"},{"v":14,"n":2,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":14,"n":3,"heb":"יְהִי","tr":"ye·Hi","s":"1961","sfull":"H1961","morph":"HVqj3ms","en":"let it be","pt":"haja"},{"v":14,"n":4,"heb":"מְאֹרֹת","tr":"me·'o·Rot","s":"3974","sfull":"H3974","morph":"HNcmpa","en":"luminaries","pt":"luminares"},{"v":14,"n":5,"heb":"בִּרְקִיעַ","tr":"bir·Ki·a'","s":"7549","sfull":"H7549","morph":"HR/Ncmsc","en":"in [the] firmament of","pt":"no firmamento de"},{"v":14,"n":6,"heb":"הַשָּׁמַיִם","tr":"ha·sha·Ma·yim","s":"8064","sfull":"H8064","morph":"HTd/Ncmpa","en":"the heavens","pt":"os céus"},{"v":14,"n":7,"heb":"לְהַבְדִּיל","tr":"le·hav·Dil","s":"914","sfull":"H0914","morph":"HR/Vhcc","en":"to separate","pt":"para separar"},{"v":14,"n":8,"heb":"בֵּין","tr":"bein","s":"996","sfull":"H0996G","morph":"HAcmsc","en":"between","pt":"entre"},{"v":14,"n":9,"heb":"הַיּוֹם","tr":"hai·Yom","s":"3117","sfull":"H3117G","morph":"HTd/Ncmsa","en":"the day","pt":"o dia"},{"v":14,"n":10,"heb":"וּבֵין","tr":"u·Vein","s":"996","sfull":"H0996G","morph":"HC/Acmsc","en":"and between","pt":"e entre"},{"v":14,"n":11,"heb":"הַלָּיְלָה","tr":"ha·La·ye·lah","s":"3915","sfull":"H3915","morph":"HTd/Ncmsa","en":"the night","pt":"a noite"},{"v":14,"n":12,"heb":"וְהָיוּ","tr":"ve·ha·Yu","s":"1961","sfull":"H1961","morph":"Hc/Vqq3cp","en":"and they will become","pt":"e serão"},{"v":14,"n":13,"heb":"לְאֹתֹת","tr":"le·'o·Tot","s":"226","sfull":"H0226H","morph":"HR/Ncfpa","en":"<into> signs","pt":"[para] sinais"},{"v":14,"n":14,"heb":"וּלְמוֹעֲדִים","tr":"u·le·Mo·'a·Dim","s":"4150","sfull":"H4150G","morph":"HC/R/Ncmpa","en":"and <into> appointed times","pt":"e [para] as estações"},{"v":14,"n":15,"heb":"וּלְיָמִים","tr":"u·le·ya·Mim","s":"3117","sfull":"H3117G","morph":"HC/R/Ncmpa","en":"and <into> days","pt":"e [para] dias"},{"v":14,"n":16,"heb":"וְשָׁנִֽים׃","tr":"ve·sha·Nim","s":"8141","sfull":"H8141","morph":"HC/Ncmpa","en":"and years","pt":"e anos"}]},{"ref":"1:15","cap":1,"vers":15,"palavras":[{"v":15,"n":1,"heb":"וְהָיוּ","tr":"ve·ha·Yu","s":"1961","sfull":"H1961","morph":"Hc/Vqq3cp","en":"and they will become","pt":"e serão"},{"v":15,"n":2,"heb":"לִמְאוֹרֹת","tr":"lim·'o·Rot","s":"3974","sfull":"H3974","morph":"HR/Ncmpa","en":"<into> luminaries","pt":"[como] luminares"},{"v":15,"n":3,"heb":"בִּרְקִיעַ","tr":"bir·Ki·a'","s":"7549","sfull":"H7549","morph":"HR/Ncmsc","en":"in [the] firmament of","pt":"no firmamento de"},{"v":15,"n":4,"heb":"הַשָּׁמַיִם","tr":"ha·sha·Ma·yim","s":"8064","sfull":"H8064","morph":"HTd/Ncmpa","en":"the heavens","pt":"os céus"},{"v":15,"n":5,"heb":"לְהָאִיר","tr":"le·ha·'Ir","s":"215","sfull":"H0215","morph":"HR/Vhcc","en":"to give light","pt":"para iluminar"},{"v":15,"n":6,"heb":"עַל־","tr":"'al-","s":"5921","sfull":"H5921A","morph":"HR","en":"on","pt":"sobre"},{"v":15,"n":7,"heb":"הָאָרֶץ","tr":"ha·'A·retz","s":"776","sfull":"H0776G","morph":"HTd/Ncfsa","en":"the earth","pt":"a terra"},{"v":15,"n":8,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and it was","pt":"e foi"},{"v":15,"n":9,"heb":"כֵֽן׃","tr":"Khen","s":"3651","sfull":"H3651C","morph":"HD","en":"so","pt":"assim"}]},{"ref":"1:16","cap":1,"vers":16,"palavras":[{"v":16,"n":1,"heb":"וַיַּעַשׂ","tr":"vai·Ya·'as","s":"6213","sfull":"H6213H","morph":"Hc/Vqw3ms","en":"and he made","pt":"e fez"},{"v":16,"n":2,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":16,"n":3,"heb":"אֶת־","tr":"'et-","s":"853","sfull":"H0853","morph":"HTo","en":"<obj.>","pt":"—"},{"v":16,"n":4,"heb":"שְׁנֵי","tr":"she·Nei","s":"8147","sfull":"H8147","morph":"HAcbdc","en":"[the] two","pt":"os dois"},{"v":16,"n":5,"heb":"הַמְּאֹרֹת","tr":"ha·me·'o·Rot","s":"3974","sfull":"H3974","morph":"HTd/Ncmpa","en":"the luminaries","pt":"os luminares"},{"v":16,"n":6,"heb":"הַגְּדֹלִים","tr":"ha·ge·do·Lim","s":"1419","sfull":"H1419A","morph":"HTd/Aampa","en":"<the> great","pt":"os grandes"},{"v":16,"n":7,"heb":"אֶת־","tr":"'et-","s":"853","sfull":"H0853","morph":"HTo","en":"<obj.>","pt":"—"},{"v":16,"n":8,"heb":"הַמָּאוֹר","tr":"ha·ma·'or","s":"3974","sfull":"H3974","morph":"HTd/Ncmsa","en":"the luminary","pt":"o luminar"},{"v":16,"n":9,"heb":"הַגָּדֹל","tr":"ha·ga·Dol","s":"1419","sfull":"H1419A","morph":"HTd/Aamsa","en":"<the> great","pt":"os grandes"},{"v":16,"n":10,"heb":"לְמֶמְשֶׁלֶת","tr":"le·mem·She·let","s":"4475","sfull":"H4475","morph":"HR/Ncfsc","en":"for [the] dominion of","pt":"para dominar sobre"},{"v":16,"n":11,"heb":"הַיּוֹם","tr":"hai·Yom","s":"3117","sfull":"H3117G","morph":"HTd/Ncmsa","en":"the day","pt":"o dia"},{"v":16,"n":12,"heb":"וְאֶת־","tr":"ve·'Et","s":"853","sfull":"H0853","morph":"HC/To","en":"and <obj.>","pt":"e —"},{"v":16,"n":13,"heb":"הַמָּאוֹר","tr":"ha·ma·'or","s":"3974","sfull":"H3974","morph":"HTd/Ncmsa","en":"the luminary","pt":"o luminar"},{"v":16,"n":14,"heb":"הַקָּטֹן","tr":"ha·ka·Ton","s":"6996","sfull":"H6996B","morph":"HTd/Aamsa","en":"<the> small","pt":"o menor"},{"v":16,"n":15,"heb":"לְמֶמְשֶׁלֶת","tr":"le·mem·She·let","s":"4475","sfull":"H4475","morph":"HR/Ncfsc","en":"for [the] dominion of","pt":"para dominar sobre"},{"v":16,"n":16,"heb":"הַלַּיְלָה","tr":"ha·Lay·lah","s":"3915","sfull":"H3915","morph":"HTd/Ncmsa","en":"the night","pt":"a noite"},{"v":16,"n":17,"heb":"וְאֵת","tr":"ve·'Et","s":"853","sfull":"H0853","morph":"HC/To","en":"and <obj.>","pt":"e —"},{"v":16,"n":18,"heb":"הַכּוֹכָבִֽים׃","tr":"ha·ko·kha·Vim","s":"3556","sfull":"H3556","morph":"HTd/Ncmpa","en":"the stars","pt":"as estrelas"}]},{"ref":"1:17","cap":1,"vers":17,"palavras":[{"v":17,"n":1,"heb":"וַיִּתֵּן","tr":"vai·yi·Ten","s":"5414","sfull":"H5414H","morph":"Hc/Vqw3ms","en":"and he set","pt":"e pôs"},{"v":17,"n":2,"heb":"אֹתָם","tr":"'o·Tam","s":"853","sfull":"H0853","morph":"HTo/Sp3mp","en":"<obj.> them","pt":"a eles"},{"v":17,"n":3,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":17,"n":4,"heb":"בִּרְקִיעַ","tr":"bir·Ki·a'","s":"7549","sfull":"H7549","morph":"HR/Ncmsc","en":"in [the] firmament of","pt":"no firmamento de"},{"v":17,"n":5,"heb":"הַשָּׁמָיִם","tr":"ha·sha·Ma·yim","s":"8064","sfull":"H8064","morph":"HTd/Ncmpa","en":"the heavens","pt":"os céus"},{"v":17,"n":6,"heb":"לְהָאִיר","tr":"le·ha·'Ir","s":"215","sfull":"H0215","morph":"HR/Vhcc","en":"to give light","pt":"para iluminar"},{"v":17,"n":7,"heb":"עַל־","tr":"'al-","s":"5921","sfull":"H5921A","morph":"HR","en":"on","pt":"sobre"},{"v":17,"n":8,"heb":"הָאָֽרֶץ׃","tr":"ha·'A·retz","s":"776","sfull":"H0776G","morph":"HTd/Ncfsa","en":"the earth","pt":"a terra"}]},{"ref":"1:18","cap":1,"vers":18,"palavras":[{"v":18,"n":1,"heb":"וְלִמְשֹׁל","tr":"ve·lim·Shol","s":"4910","sfull":"H4910","morph":"HC/R/Vqcc","en":"and to rule","pt":"e para dominar"},{"v":18,"n":2,"heb":"בַּיּוֹם","tr":"bai·Yom","s":"3117","sfull":"H3117G","morph":"HRd/Ncmsa","en":"over the day","pt":"sobre o dia"},{"v":18,"n":3,"heb":"וּבַלַּיְלָה","tr":"u·va·Lay·lah","s":"3915","sfull":"H3915","morph":"HC/Rd/Ncmsa","en":"and over the night","pt":"e sobre a noite"},{"v":18,"n":4,"heb":"וּֽלֲהַבְדִּיל","tr":"u·la·hav·Dil","s":"914","sfull":"H0914","morph":"HC/R/Vhcc","en":"and to separate","pt":"e para separar"},{"v":18,"n":5,"heb":"בֵּין","tr":"bein","s":"996","sfull":"H0996G","morph":"HAcmsc","en":"between","pt":"entre"},{"v":18,"n":6,"heb":"הָאוֹר","tr":"ha·'Or","s":"216","sfull":"H0216","morph":"HTd/Ncfsa","en":"the light","pt":"a luz"},{"v":18,"n":7,"heb":"וּבֵין","tr":"u·Vein","s":"996","sfull":"H0996G","morph":"HC/Acmsc","en":"and between","pt":"e entre"},{"v":18,"n":8,"heb":"הַחֹשֶׁךְ","tr":"ha·Cho·shekh","s":"2822","sfull":"H2822","morph":"HTd/Ncmsa","en":"the darkness","pt":"as trevas"},{"v":18,"n":9,"heb":"וַיַּרְא","tr":"vai·Yar'","s":"7200","sfull":"H7200G","morph":"Hc/Vqw3ms","en":"and he saw","pt":"e viu"},{"v":18,"n":10,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":18,"n":11,"heb":"כִּי־","tr":"ki-","s":"3588","sfull":"H3588A","morph":"HTc","en":"that","pt":"que"},{"v":18,"n":12,"heb":"טֽוֹב׃","tr":"Tov","s":"2895","sfull":"H2895","morph":"HVqp3ms","en":"[it was] good","pt":"era bom"}]},{"ref":"1:19","cap":1,"vers":19,"palavras":[{"v":19,"n":1,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and there was","pt":"e houve"},{"v":19,"n":2,"heb":"עֶרֶב","tr":"'E·rev","s":"6153","sfull":"H6153","morph":"HNcmsa","en":"evening","pt":"tarde"},{"v":19,"n":3,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and there was","pt":"e houve"},{"v":19,"n":4,"heb":"בֹקֶר","tr":"Vo·ker","s":"1242","sfull":"H1242","morph":"HNcmsa","en":"morning","pt":"manhã"},{"v":19,"n":5,"heb":"יוֹם","tr":"Yom","s":"3117","sfull":"H3117G","morph":"HNcmsa","en":"a day","pt":"um dia"},{"v":19,"n":6,"heb":"רְבִיעִֽי׃ פ","tr":"re·vi·'I","s":"7243","sfull":"H7243","morph":"HAomsa","en":"fourth","pt":"quarto"}]},{"ref":"1:20","cap":1,"vers":20,"palavras":[{"v":20,"n":1,"heb":"וַיֹּאמֶר","tr":"vai·Yo·mer","s":"559","sfull":"H0559","morph":"Hc/Vqw3ms","en":"and he said","pt":"e disse"},{"v":20,"n":2,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":20,"n":3,"heb":"יִשְׁרְצוּ","tr":"yish·re·Tzu","s":"8317","sfull":"H8317","morph":"HVqi3mp","en":"let them swarm","pt":"fervilhem"},{"v":20,"n":4,"heb":"הַמַּיִם","tr":"ha·Ma·yim","s":"4325","sfull":"H4325G","morph":"HTd/Ncmpa","en":"the waters","pt":"as águas"},{"v":20,"n":5,"heb":"שֶׁרֶץ","tr":"She·retz","s":"8318","sfull":"H8318","morph":"HNcmsc","en":"swarming thing[s]","pt":"seres que fervilham"},{"v":20,"n":6,"heb":"נֶפֶשׁ","tr":"Ne·fesh","s":"5315","sfull":"H5315K","morph":"HNcfsa","en":"creature[s]","pt":"os seres viventes"},{"v":20,"n":7,"heb":"חַיָּה","tr":"chai·Yah","s":"2416","sfull":"H2416A","morph":"HAafsa","en":"living","pt":"vivente"},{"v":20,"n":8,"heb":"וְעוֹף","tr":"ve·'Of","s":"5775","sfull":"H5775","morph":"HC/Ncmsa","en":"and bird[s]","pt":"e as aves"},{"v":20,"n":9,"heb":"יְעוֹפֵף","tr":"ye·'o·Fef","s":"5774","sfull":"H5774A","morph":"HVpi3ms","en":"let it fly","pt":"voem"},{"v":20,"n":10,"heb":"עַל־","tr":"'al-","s":"5921","sfull":"H5921A","morph":"HR","en":"above","pt":"acima"},{"v":20,"n":11,"heb":"הָאָרֶץ","tr":"ha·'A·retz","s":"776","sfull":"H0776G","morph":"HTd/Ncfsa","en":"the earth","pt":"a terra"},{"v":20,"n":12,"heb":"עַל־","tr":"'al-","s":"5921","sfull":"H5921A","morph":"HR","en":"on","pt":"sobre"},{"v":20,"n":13,"heb":"פְּנֵי","tr":"pe·Nei","s":"6440","sfull":"H6440J","morph":"HNcmpc","en":"[the] surface of","pt":"a face de"},{"v":20,"n":14,"heb":"רְקִיעַ","tr":"re·Ki·a'","s":"7549","sfull":"H7549","morph":"HNcmsc","en":"[the] firmament of","pt":"o firmamento de"},{"v":20,"n":15,"heb":"הַשָּׁמָֽיִם׃","tr":"ha·sha·Ma·yim","s":"8064","sfull":"H8064","morph":"HTd/Ncmpa","en":"the heavens","pt":"os céus"}]},{"ref":"1:21","cap":1,"vers":21,"palavras":[{"v":21,"n":1,"heb":"וַיִּבְרָא","tr":"vai·yiv·Ra'","s":"1254","sfull":"H1254A","morph":"Hc/Vqw3ms","en":"and he created","pt":"e criou"},{"v":21,"n":2,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":21,"n":3,"heb":"אֶת־","tr":"'et-","s":"853","sfull":"H0853","morph":"HTo","en":"<obj.>","pt":"—"},{"v":21,"n":4,"heb":"הַתַּנִּינִם","tr":"ha·ta·ni·Nim","s":"8577","sfull":"H8577N","morph":"HTd/Ncmpa","en":"the sea monsters","pt":"os grandes animais marinhos"},{"v":21,"n":5,"heb":"הַגְּדֹלִים","tr":"ha·ge·do·Lim","s":"1419","sfull":"H1419A","morph":"HTd/Aampa","en":"<the> great","pt":"os grandes"},{"v":21,"n":6,"heb":"וְאֵת","tr":"ve·'Et","s":"853","sfull":"H0853","morph":"HC/To","en":"and <obj.>","pt":"e —"},{"v":21,"n":7,"heb":"כָּל־","tr":"kol-","s":"3605","sfull":"H3605","morph":"HNcmsc","en":"every","pt":"todo"},{"v":21,"n":8,"heb":"נֶפֶשׁ","tr":"Ne·fesh","s":"5315","sfull":"H5315K","morph":"HNcfsa","en":"creature","pt":"ser vivente"},{"v":21,"n":9,"heb":"הַֽחַיָּה׀","tr":"ha·chai·Yah","s":"2416","sfull":"H2416A","morph":"HTd/Aafsa","en":"<the> living","pt":"os viventes"},{"v":21,"n":10,"heb":"הָֽרֹמֶשֶׂת","tr":"ha·ro·Me·set","s":"7430","sfull":"H7430","morph":"HTd/Vqrfsa","en":"which creeps","pt":"que se move"},{"v":21,"n":11,"heb":"אֲשֶׁר","tr":"'a·Sher","s":"834","sfull":"H0834A","morph":"HTr","en":"which","pt":"que"},{"v":21,"n":12,"heb":"שָׁרְצוּ","tr":"sha·re·Tzu","s":"8317","sfull":"H8317","morph":"HVqp3cp","en":"they swarmed","pt":"fervilharam"},{"v":21,"n":13,"heb":"הַמַּיִם","tr":"ha·Ma·yim","s":"4325","sfull":"H4325G","morph":"HTd/Ncmpa","en":"the waters","pt":"as águas"},{"v":21,"n":14,"heb":"לְמִֽינֵהֶם","tr":"le·mi·ne·Hem","s":"4327","sfull":"H4327","morph":"HR/Ncmsc/Sp3mp","en":"to kind their","pt":"segundo as suas espécies"},{"v":21,"n":15,"heb":"וְאֵת","tr":"ve·'Et","s":"853","sfull":"H0853","morph":"HC/To","en":"and <obj.>","pt":"e —"},{"v":21,"n":16,"heb":"כָּל־","tr":"kol-","s":"3605","sfull":"H3605","morph":"HNcmsc","en":"every","pt":"todo"},{"v":21,"n":17,"heb":"עוֹף","tr":"of","s":"5775","sfull":"H5775","morph":"HNcmsc","en":"bird of","pt":"ave de"},{"v":21,"n":18,"heb":"כָּנָף","tr":"ka·Naf","s":"3671","sfull":"H3671","morph":"HNcfsa","en":"wing","pt":"de asas"},{"v":21,"n":19,"heb":"לְמִינֵהוּ","tr":"le·mi·Ne·hu","s":"4327","sfull":"H4327","morph":"HR/Ncmsc/Sp3ms","en":"to kind its","pt":"segundo a sua espécie"},{"v":21,"n":20,"heb":"וַיַּרְא","tr":"vai·Yar'","s":"7200","sfull":"H7200G","morph":"Hc/Vqw3ms","en":"and he saw","pt":"e viu"},{"v":21,"n":21,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":21,"n":22,"heb":"כִּי־","tr":"ki-","s":"3588","sfull":"H3588A","morph":"HTc","en":"that","pt":"que"},{"v":21,"n":23,"heb":"טֽוֹב׃","tr":"Tov","s":"2895","sfull":"H2895","morph":"HVqp3ms","en":"[it was] good","pt":"era bom"}]},{"ref":"1:22","cap":1,"vers":22,"palavras":[{"v":22,"n":1,"heb":"וַיְבָרֶךְ","tr":"vay·Va·rekh","s":"1288","sfull":"H1288","morph":"Hc/Vpw3ms","en":"and he blessed","pt":"e abençoou"},{"v":22,"n":2,"heb":"אֹתָם","tr":"'o·Tam","s":"853","sfull":"H0853","morph":"HTo/Sp3mp","en":"<obj.> them","pt":"a eles"},{"v":22,"n":3,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":22,"n":4,"heb":"לֵאמֹר","tr":"le·Mor","s":"559","sfull":"H0559","morph":"HR/Vqcc","en":"<to> saying","pt":"dizendo"},{"v":22,"n":5,"heb":"פְּרוּ","tr":"pe·Ru","s":"6509","sfull":"H6509","morph":"HVqv2mp","en":"be fruitful","pt":"frutificai"},{"v":22,"n":6,"heb":"וּרְבוּ","tr":"u·re·Vu","s":"7235","sfull":"H7235A","morph":"HC/Vqv2mp","en":"and multiply","pt":"e multiplicai"},{"v":22,"n":7,"heb":"וּמִלְאוּ","tr":"u·mil·'U","s":"4390","sfull":"H4390","morph":"HC/Vqv2mp","en":"and fill","pt":"e enchei"},{"v":22,"n":8,"heb":"אֶת־","tr":"'et-","s":"853","sfull":"H0853","morph":"HTo","en":"<obj.>","pt":"—"},{"v":22,"n":9,"heb":"הַמַּיִם","tr":"ha·Ma·yim","s":"4325","sfull":"H4325G","morph":"HTd/Ncmpa","en":"the waters","pt":"as águas"},{"v":22,"n":10,"heb":"בַּיַּמִּים","tr":"bai·ya·Mim","s":"3220","sfull":"H3220G","morph":"HRd/Ncmpa","en":"in the seas","pt":"nos mares"},{"v":22,"n":11,"heb":"וְהָעוֹף","tr":"ve·ha·'of","s":"5775","sfull":"H5775","morph":"HC/Td/Ncmsa","en":"and the bird[s]","pt":"e as aves"},{"v":22,"n":12,"heb":"יִרֶב","tr":"Yi·rev","s":"7235","sfull":"H7235A","morph":"HVqj3ms","en":"let it multiply","pt":"multipliquem-se"},{"v":22,"n":13,"heb":"בָּאָֽרֶץ׃","tr":"ba·'A·retz","s":"776","sfull":"H0776G","morph":"HRd/Ncfsa","en":"on the earth","pt":"sobre a terra"}]},{"ref":"1:23","cap":1,"vers":23,"palavras":[{"v":23,"n":1,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and there was","pt":"e houve"},{"v":23,"n":2,"heb":"עֶרֶב","tr":"'E·rev","s":"6153","sfull":"H6153","morph":"HNcmsa","en":"evening","pt":"tarde"},{"v":23,"n":3,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and there was","pt":"e houve"},{"v":23,"n":4,"heb":"בֹקֶר","tr":"Vo·ker","s":"1242","sfull":"H1242","morph":"HNcmsa","en":"morning","pt":"manhã"},{"v":23,"n":5,"heb":"יוֹם","tr":"Yom","s":"3117","sfull":"H3117G","morph":"HNcmsa","en":"a day","pt":"um dia"},{"v":23,"n":6,"heb":"חֲמִישִֽׁי׃ פ","tr":"cha·mi·Shi","s":"2549","sfull":"H2549","morph":"HAomsa","en":"fifth","pt":"quinto"}]},{"ref":"1:24","cap":1,"vers":24,"palavras":[{"v":24,"n":1,"heb":"וַיֹּאמֶר","tr":"vai·Yo·mer","s":"559","sfull":"H0559","morph":"Hc/Vqw3ms","en":"and he said","pt":"e disse"},{"v":24,"n":2,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":24,"n":3,"heb":"תּוֹצֵא","tr":"to·Tze'","s":"3318","sfull":"H3318M","morph":"HVhj3fs","en":"let it produce","pt":"produza"},{"v":24,"n":4,"heb":"הָאָרֶץ","tr":"ha·'A·retz","s":"776","sfull":"H0776H","morph":"HTd/Ncfsa","en":"the earth","pt":"a terra"},{"v":24,"n":5,"heb":"נֶפֶשׁ","tr":"Ne·fesh","s":"5315","sfull":"H5315K","morph":"HNcfsa","en":"creature[s]","pt":"os seres viventes"},{"v":24,"n":6,"heb":"חַיָּה","tr":"chai·Yah","s":"2416","sfull":"H2416A","morph":"HAafsa","en":"living","pt":"vivente"},{"v":24,"n":7,"heb":"לְמִינָהּ","tr":"le·mi·Nah","s":"4327","sfull":"H4327","morph":"HR/Ncmsc/Sp3fs","en":"to kind its","pt":"segundo a sua espécie"},{"v":24,"n":8,"heb":"בְּהֵמָה","tr":"be·he·Mah","s":"929","sfull":"H0929","morph":"HNcfsa","en":"livestock","pt":"gado"},{"v":24,"n":9,"heb":"וָרֶמֶשׂ","tr":"va·Re·mes","s":"7431","sfull":"H7431","morph":"HC/Ncmsa","en":"and creeping thing[s]","pt":"e os répteis"},{"v":24,"n":10,"heb":"וְחַֽיְתוֹ־","tr":"ve·chay·tov-","s":"2416","sfull":"H2416C","morph":"HC/Ncfsc","en":"and animal[s] of","pt":"e os animais de"},{"v":24,"n":11,"heb":"אֶרֶץ","tr":"'E·retz","s":"776","sfull":"H0776H","morph":"HNcfsa","en":"[the] earth","pt":"a terra"},{"v":24,"n":12,"heb":"לְמִינָהּ","tr":"le·mi·Nah","s":"4327","sfull":"H4327","morph":"HR/Ncmsc/Sp3fs","en":"to kind its","pt":"segundo a sua espécie"},{"v":24,"n":13,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and it was","pt":"e foi"},{"v":24,"n":14,"heb":"כֵֽן׃","tr":"Khen","s":"3651","sfull":"H3651C","morph":"HD","en":"so","pt":"assim"}]},{"ref":"1:25","cap":1,"vers":25,"palavras":[{"v":25,"n":1,"heb":"וַיַּעַשׂ","tr":"vai·Ya·'as","s":"6213","sfull":"H6213H","morph":"Hc/Vqw3ms","en":"and he made","pt":"e fez"},{"v":25,"n":2,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":25,"n":3,"heb":"אֶת־","tr":"'et-","s":"853","sfull":"H0853","morph":"HTo","en":"<obj.>","pt":"—"},{"v":25,"n":4,"heb":"חַיַּת","tr":"chai·Yat","s":"2416","sfull":"H2416C","morph":"HNcfsc","en":"[the] animal[s] of","pt":"os animais de"},{"v":25,"n":5,"heb":"הָאָרֶץ","tr":"ha·'A·retz","s":"776","sfull":"H0776G","morph":"HTd/Ncfsa","en":"the earth","pt":"a terra"},{"v":25,"n":6,"heb":"לְמִינָהּ","tr":"le·mi·Nah","s":"4327","sfull":"H4327","morph":"HR/Ncmsc/Sp3fs","en":"to kind its","pt":"segundo a sua espécie"},{"v":25,"n":7,"heb":"וְאֶת־","tr":"ve·'Et","s":"853","sfull":"H0853","morph":"HC/To","en":"and <obj.>","pt":"e —"},{"v":25,"n":8,"heb":"הַבְּהֵמָה","tr":"ha·be·he·Mah","s":"929","sfull":"H0929","morph":"HTd/Ncfsa","en":"the livestock","pt":"o gado"},{"v":25,"n":9,"heb":"לְמִינָהּ","tr":"le·mi·Nah","s":"4327","sfull":"H4327","morph":"HR/Ncmsc/Sp3fs","en":"to kind its","pt":"segundo a sua espécie"},{"v":25,"n":10,"heb":"וְאֵת","tr":"ve·'Et","s":"853","sfull":"H0853","morph":"HC/To","en":"and <obj.>","pt":"e —"},{"v":25,"n":11,"heb":"כָּל־","tr":"kol-","s":"3605","sfull":"H3605","morph":"HNcmsc","en":"every","pt":"todo"},{"v":25,"n":12,"heb":"רֶמֶשׂ","tr":"Re·mes","s":"7431","sfull":"H7431","morph":"HNcmsc","en":"<the> creeping thing of","pt":"o réptil de"},{"v":25,"n":13,"heb":"הָֽאֲדָמָה","tr":"ha·'a·da·Mah","s":"127","sfull":"H0127G","morph":"HTd/Ncfsa","en":"the ground","pt":"o solo"},{"v":25,"n":14,"heb":"לְמִינֵהוּ","tr":"le·mi·Ne·hu","s":"4327","sfull":"H4327","morph":"HR/Ncmsc/Sp3ms","en":"to kind its","pt":"segundo a sua espécie"},{"v":25,"n":15,"heb":"וַיַּרְא","tr":"vai·Yar'","s":"7200","sfull":"H7200G","morph":"Hc/Vqw3ms","en":"and he saw","pt":"e viu"},{"v":25,"n":16,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":25,"n":17,"heb":"כִּי־","tr":"ki-","s":"3588","sfull":"H3588A","morph":"HTc","en":"that","pt":"que"},{"v":25,"n":18,"heb":"טֽוֹב׃","tr":"Tov","s":"2895","sfull":"H2895","morph":"HVqp3ms","en":"[it was] good","pt":"era bom"}]},{"ref":"1:26","cap":1,"vers":26,"palavras":[{"v":26,"n":1,"heb":"וַיֹּאמֶר","tr":"vai·Yo·mer","s":"559","sfull":"H0559","morph":"Hc/Vqw3ms","en":"and he said","pt":"e disse"},{"v":26,"n":2,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":26,"n":3,"heb":"נַֽעֲשֶׂה","tr":"na·'a·Seh","s":"6213","sfull":"H6213H","morph":"HVqi1cp","en":"let us make","pt":"façamos"},{"v":26,"n":4,"heb":"אָדָם","tr":"'a·Dam","s":"120","sfull":"H0120G","morph":"HNcmsa","en":"humankind","pt":"homem"},{"v":26,"n":5,"heb":"בְּצַלְמֵנוּ","tr":"be·tzal·Me·nu","s":"6754","sfull":"H6754","morph":"HR/Ncmsc/Sp1bp","en":"in image our","pt":"à nossa imagem"},{"v":26,"n":6,"heb":"כִּדְמוּתֵנוּ","tr":"kid·mu·Te·nu","s":"1823","sfull":"H1823","morph":"HR/Ncfsc/Sp1bp","en":"according to likeness our","pt":"conforme a nossa semelhança"},{"v":26,"n":7,"heb":"וְיִרְדּוּ","tr":"ve·yir·Du","s":"7287","sfull":"H7287A","morph":"HC/Vqu3mp","en":"and they may rule","pt":"e dominem"},{"v":26,"n":8,"heb":"בִדְגַת","tr":"vid·Gat","s":"1710","sfull":"H1710","morph":"HR/Ncfsc","en":"over [the] fish of","pt":"sobre os peixes de"},{"v":26,"n":9,"heb":"הַיָּם","tr":"hai·Yam","s":"3220","sfull":"H3220G","morph":"HTd/Ncmsa","en":"the sea","pt":"o mar"},{"v":26,"n":10,"heb":"וּבְעוֹף","tr":"u·ve·'of","s":"5775","sfull":"H5775","morph":"HC/R/Ncmsc","en":"and over [the] bird[s] of","pt":"e sobre as aves de"},{"v":26,"n":11,"heb":"הַשָּׁמַיִם","tr":"ha·sha·Ma·yim","s":"8064","sfull":"H8064","morph":"HTd/Ncmpa","en":"the heavens","pt":"os céus"},{"v":26,"n":12,"heb":"וּבַבְּהֵמָה","tr":"u·va·be·he·Mah","s":"929","sfull":"H0929","morph":"HC/Rd/Ncfsa","en":"and over the livestock","pt":"e sobre o gado"},{"v":26,"n":13,"heb":"וּבְכָל־","tr":"u·ve·Khol-","s":"3605","sfull":"H3605","morph":"HC/R/Ncmsc","en":"and over all","pt":"e sobre todo"},{"v":26,"n":14,"heb":"הָאָרֶץ","tr":"ha·'A·retz","s":"776","sfull":"H0776G","morph":"HTd/Ncfsa","en":"the earth","pt":"a terra"},{"v":26,"n":15,"heb":"וּבְכָל־","tr":"u·ve·Khol-","s":"3605","sfull":"H3605","morph":"HC/R/Ncmsc","en":"and over every","pt":"e sobre todo"},{"v":26,"n":16,"heb":"הָרֶמֶשׂ","tr":"ha·Re·mes","s":"7431","sfull":"H7431","morph":"HTd/Ncmsa","en":"<the> creeping thing","pt":"o réptil"},{"v":26,"n":17,"heb":"הָֽרֹמֵשׂ","tr":"ha·ro·Mes","s":"7430","sfull":"H7430","morph":"HTd/Vqrmsa","en":"which creeps","pt":"que se move"},{"v":26,"n":18,"heb":"עַל־","tr":"'al-","s":"5921","sfull":"H5921A","morph":"HR","en":"on","pt":"sobre"},{"v":26,"n":19,"heb":"הָאָֽרֶץ׃","tr":"ha·'A·retz","s":"776","sfull":"H0776H","morph":"HTd/Ncfsa","en":"the earth","pt":"a terra"}]},{"ref":"1:27","cap":1,"vers":27,"palavras":[{"v":27,"n":1,"heb":"וַיִּבְרָא","tr":"vai·yiv·Ra'","s":"1254","sfull":"H1254A","morph":"Hc/Vqw3ms","en":"and he created","pt":"e criou"},{"v":27,"n":2,"heb":"אֱלֹהִים׀","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":27,"n":3,"heb":"אֶת־","tr":"'et-","s":"853","sfull":"H0853","morph":"HTo","en":"<obj.>","pt":"—"},{"v":27,"n":4,"heb":"הָֽאָדָם","tr":"ha·'a·Dam","s":"120","sfull":"H0120G","morph":"HTd/Ncmsa","en":"<the> humankind","pt":"o homem"},{"v":27,"n":5,"heb":"בְּצַלְמוֹ","tr":"be·tzal·Mo","s":"6754","sfull":"H6754","morph":"HR/Ncmsc/Sp3ms","en":"in own image his","pt":"à sua própria imagem"},{"v":27,"n":6,"heb":"בְּצֶלֶם","tr":"be·Tze·lem","s":"6754","sfull":"H6754","morph":"HR/Ncmsc","en":"in [the] image of","pt":"à imagem de"},{"v":27,"n":7,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":27,"n":8,"heb":"בָּרָא","tr":"ba·Ra'","s":"1254","sfull":"H1254A","morph":"HVqp3ms","en":"he created","pt":"criou"},{"v":27,"n":9,"heb":"אֹתוֹ","tr":"'o·To","s":"853","sfull":"H0853","morph":"HTo/Sp3ms","en":"<obj.> it","pt":"a ele"},{"v":27,"n":10,"heb":"זָכָר","tr":"za·Khar","s":"2145","sfull":"H2145","morph":"HAamsa","en":"male","pt":"macho"},{"v":27,"n":11,"heb":"וּנְקֵבָה","tr":"u·ne·ke·Vah","s":"5347","sfull":"H5347","morph":"HC/Aafsa","en":"and female","pt":"e fêmea"},{"v":27,"n":12,"heb":"בָּרָא","tr":"ba·Ra'","s":"1254","sfull":"H1254A","morph":"HVqp3ms","en":"he created","pt":"criou"},{"v":27,"n":13,"heb":"אֹתָֽם׃","tr":"'o·Tam","s":"853","sfull":"H0853","morph":"HTo/Sp3mp","en":"<obj.> them","pt":"a eles"}]},{"ref":"1:28","cap":1,"vers":28,"palavras":[{"v":28,"n":1,"heb":"וַיְבָרֶךְ","tr":"vay·Va·rekh","s":"1288","sfull":"H1288","morph":"Hc/Vpw3ms","en":"and he blessed","pt":"e abençoou"},{"v":28,"n":2,"heb":"אֹתָם","tr":"'o·Tam","s":"853","sfull":"H0853","morph":"HTo/Sp3mp","en":"<obj.> them","pt":"a eles"},{"v":28,"n":3,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":28,"n":4,"heb":"וַיֹּאמֶר","tr":"vai·Yo·mer","s":"559","sfull":"H0559","morph":"Hc/Vqw3ms","en":"and he said","pt":"e disse"},{"v":28,"n":5,"heb":"לָהֶם","tr":"la·Hem","s":"9038","sfull":"H9038","morph":"HRd/Sp3mp","en":"to <the> them","pt":"a eles"},{"v":28,"n":6,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":28,"n":7,"heb":"פְּרוּ","tr":"pe·Ru","s":"6509","sfull":"H6509","morph":"HVqv2mp","en":"be fruitful","pt":"frutificai"},{"v":28,"n":8,"heb":"וּרְבוּ","tr":"u·re·Vu","s":"7235","sfull":"H7235A","morph":"HC/Vqv2mp","en":"and multiply","pt":"e multiplicai"},{"v":28,"n":9,"heb":"וּמִלְאוּ","tr":"u·mil·'U","s":"4390","sfull":"H4390","morph":"HC/Vqv2mp","en":"and fill","pt":"e enchei"},{"v":28,"n":10,"heb":"אֶת־","tr":"'et-","s":"853","sfull":"H0853","morph":"HTo","en":"<obj.>","pt":"—"},{"v":28,"n":11,"heb":"הָאָרֶץ","tr":"ha·'A·retz","s":"776","sfull":"H0776G","morph":"HTd/Ncfsa","en":"the earth","pt":"a terra"},{"v":28,"n":12,"heb":"וְכִבְשֻׁהָ","tr":"ve·khiv·Shu·ha","s":"3533","sfull":"H3533","morph":"HC/Vqv2mp/Sp3fs","en":"and subdue it","pt":"e sujeitai-a"},{"v":28,"n":13,"heb":"וּרְדוּ","tr":"u·re·Du","s":"7287","sfull":"H7287A","morph":"HC/Vqv2mp","en":"and rule","pt":"e dominai"},{"v":28,"n":14,"heb":"בִּדְגַת","tr":"bid·Gat","s":"1710","sfull":"H1710","morph":"HR/Ncfsc","en":"over [the] fish of","pt":"sobre os peixes de"},{"v":28,"n":15,"heb":"הַיָּם","tr":"hai·Yam","s":"3220","sfull":"H3220G","morph":"HTd/Ncmsa","en":"the sea","pt":"o mar"},{"v":28,"n":16,"heb":"וּבְעוֹף","tr":"u·ve·'of","s":"5775","sfull":"H5775","morph":"HC/R/Ncmsc","en":"and over [the] bird[s] of","pt":"e sobre as aves de"},{"v":28,"n":17,"heb":"הַשָּׁמַיִם","tr":"ha·sha·Ma·yim","s":"8064","sfull":"H8064","morph":"HTd/Ncmpa","en":"the heavens","pt":"os céus"},{"v":28,"n":18,"heb":"וּבְכָל־","tr":"u·ve·Khol-","s":"3605","sfull":"H3605","morph":"HC/R/Ncmsc","en":"and over every","pt":"e sobre todo"},{"v":28,"n":19,"heb":"חַיָּה","tr":"chai·Yah","s":"2416","sfull":"H2416A","morph":"HNcfsa","en":"animal","pt":"animal"},{"v":28,"n":20,"heb":"הָֽרֹמֶשֶׂת","tr":"ha·ro·Me·set","s":"7430","sfull":"H7430","morph":"HTd/Vqrfsa","en":"which creeps","pt":"que se move"},{"v":28,"n":21,"heb":"עַל־","tr":"'al-","s":"5921","sfull":"H5921A","morph":"HR","en":"on","pt":"sobre"},{"v":28,"n":22,"heb":"הָאָֽרֶץ׃","tr":"ha·'A·retz","s":"776","sfull":"H0776H","morph":"HTd/Ncfsa","en":"the earth","pt":"a terra"}]},{"ref":"1:29","cap":1,"vers":29,"palavras":[{"v":29,"n":1,"heb":"וַיֹּאמֶר","tr":"vai·Yo·mer","s":"559","sfull":"H0559","morph":"Hc/Vqw3ms","en":"and he said","pt":"e disse"},{"v":29,"n":2,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":29,"n":3,"heb":"הִנֵּה","tr":"hi·Neh","s":"2009","sfull":"H2009","morph":"HTj","en":"here!","pt":"eis"},{"v":29,"n":4,"heb":"נָתַתִּי","tr":"na·Ta·ti","s":"5414","sfull":"H5414G","morph":"HVqp1cs","en":"I give","pt":"eu dou"},{"v":29,"n":5,"heb":"לָכֶם","tr":"la·Khem","s":"9036","sfull":"H9036","morph":"HRd/Sp2mp","en":"to <the> you","pt":"a vós"},{"v":29,"n":6,"heb":"אֶת־","tr":"'et-","s":"853","sfull":"H0853","morph":"HTo","en":"<obj.>","pt":"—"},{"v":29,"n":7,"heb":"כָּל־","tr":"kol-","s":"3605","sfull":"H3605","morph":"HNcmsc","en":"every","pt":"todo"},{"v":29,"n":8,"heb":"עֵשֶׂב׀","tr":"'E·sev","s":"6212","sfull":"H6212","morph":"HNcmsa","en":"plant","pt":"erva"},{"v":29,"n":9,"heb":"זֹרֵעַ","tr":"zo·Re·a'","s":"2232","sfull":"H2232","morph":"HVqrmsa","en":"[which] bears seed","pt":"que dá semente"},{"v":29,"n":10,"heb":"זֶרַע","tr":"Ze·ra'","s":"2233","sfull":"H2233G","morph":"HNcmsa","en":"seed","pt":"semente"},{"v":29,"n":11,"heb":"אֲשֶׁר","tr":"'a·Sher","s":"834","sfull":"H0834A","morph":"HTr","en":"which","pt":"que"},{"v":29,"n":12,"heb":"עַל־","tr":"'al-","s":"5921","sfull":"H5921A","morph":"HR","en":"[is] on","pt":"sobre"},{"v":29,"n":13,"heb":"פְּנֵי","tr":"pe·Nei","s":"6440","sfull":"H6440J","morph":"HNcmpc","en":"[the] surface of","pt":"a face de"},{"v":29,"n":14,"heb":"כָל־","tr":"khol-","s":"3605","sfull":"H3605","morph":"HNcmsc","en":"all","pt":"todo"},{"v":29,"n":15,"heb":"הָאָרֶץ","tr":"ha·'A·retz","s":"776","sfull":"H0776G","morph":"HTd/Ncfsa","en":"the earth","pt":"a terra"},{"v":29,"n":16,"heb":"וְאֶת־","tr":"ve·'Et","s":"853","sfull":"H0853","morph":"HC/To","en":"and <obj.>","pt":"e —"},{"v":29,"n":17,"heb":"כָּל־","tr":"kol-","s":"3605","sfull":"H3605","morph":"HNcmsc","en":"every","pt":"todo"},{"v":29,"n":18,"heb":"הָעֵץ","tr":"ha·'Etz","s":"6086","sfull":"H6086H","morph":"HTd/Ncmsa","en":"<the> tree","pt":"a árvore"},{"v":29,"n":19,"heb":"אֲשֶׁר־","tr":"'a·Sher-","s":"834","sfull":"H0834A","morph":"HTr","en":"which","pt":"que"},{"v":29,"n":20,"heb":"בּוֹ","tr":"bo","s":"9033","sfull":"H9033","morph":"HRd/Sp3ms","en":"in <the> it","pt":"nele"},{"v":29,"n":21,"heb":"פְרִי־","tr":"fe·ri-","s":"6529","sfull":"H6529","morph":"HNcmsc","en":"[is the] fruit of","pt":"o fruto de"},{"v":29,"n":22,"heb":"עֵץ","tr":"'etz","s":"6086","sfull":"H6086H","morph":"HNcmsa","en":"a tree","pt":"uma árvore"},{"v":29,"n":23,"heb":"זֹרֵעַ","tr":"zo·Re·a'","s":"2232","sfull":"H2232","morph":"HVqrmsa","en":"[which] bears seed","pt":"que dá semente"},{"v":29,"n":24,"heb":"זָרַע","tr":"Za·ra'","s":"2233","sfull":"H2233G","morph":"HNcmsa","en":"seed","pt":"semente"},{"v":29,"n":25,"heb":"לָכֶם","tr":"la·Khem","s":"9036","sfull":"H9036","morph":"HRd/Sp2mp","en":"to <the> you","pt":"a vós"},{"v":29,"n":26,"heb":"יִֽהְיֶה","tr":"yih·Yeh","s":"1961","sfull":"H1961","morph":"HVqi3ms","en":"<it> will be[long]","pt":"pertencerá"},{"v":29,"n":27,"heb":"לְאָכְלָֽה׃","tr":"le·'okh·Lah","s":"402","sfull":"H0402","morph":"HR/Ncfsa","en":"to food","pt":"para alimento"}]},{"ref":"1:30","cap":1,"vers":30,"palavras":[{"v":30,"n":1,"heb":"וּֽלְכָל־","tr":"u·le·khol-","s":"3605","sfull":"H3605","morph":"HC/R/Ncmsc","en":"and to every","pt":"e a todo"},{"v":30,"n":2,"heb":"חַיַּת","tr":"chai·Yat","s":"2416","sfull":"H2416C","morph":"HNcfsc","en":"<the> animal of","pt":"o animal de"},{"v":30,"n":3,"heb":"הָאָרֶץ","tr":"Ha·'a·retz","s":"776","sfull":"H0776H","morph":"HTd/Ncfsa","en":"the earth","pt":"a terra"},{"v":30,"n":4,"heb":"וּלְכָל־","tr":"u·le·khol-","s":"3605","sfull":"H3605","morph":"HC/R/Ncmsc","en":"and to every","pt":"e a todo"},{"v":30,"n":5,"heb":"עוֹף","tr":"of","s":"5775","sfull":"H5775","morph":"HNcmsc","en":"<the> bird of","pt":"a ave de"},{"v":30,"n":6,"heb":"הַשָּׁמַיִם","tr":"ha·sha·Ma·yim","s":"8064","sfull":"H8064","morph":"HTd/Ncmpa","en":"the heavens","pt":"os céus"},{"v":30,"n":7,"heb":"וּלְכֹל׀","tr":"u·le·Khol","s":"3605","sfull":"H3605","morph":"HC/R/Ncmsc","en":"and to every","pt":"e a todo"},{"v":30,"n":8,"heb":"רוֹמֵשׂ","tr":"ro·Mes","s":"7430","sfull":"H7430","morph":"HVqrmsa","en":"creeping [thing]","pt":"réptil"},{"v":30,"n":9,"heb":"עַל־","tr":"'al-","s":"5921","sfull":"H5921A","morph":"HR","en":"on","pt":"sobre"},{"v":30,"n":10,"heb":"הָאָרֶץ","tr":"ha·'A·retz","s":"776","sfull":"H0776H","morph":"HTd/Ncfsa","en":"the earth","pt":"a terra"},{"v":30,"n":11,"heb":"אֲשֶׁר־","tr":"'a·Sher-","s":"834","sfull":"H0834A","morph":"HTr","en":"which","pt":"que"},{"v":30,"n":12,"heb":"בּוֹ","tr":"bo","s":"9033","sfull":"H9033","morph":"HRd/Sp3ms","en":"[is] in <the> it","pt":"nele"},{"v":30,"n":13,"heb":"נֶפֶשׁ","tr":"Ne·fesh","s":"5315","sfull":"H5315H","morph":"HNcfsa","en":"life","pt":"vida"},{"v":30,"n":14,"heb":"חַיָּה","tr":"chai·Yah","s":"2416","sfull":"H2416A","morph":"HAafsa","en":"living","pt":"vivente"},{"v":30,"n":15,"heb":"אֶת־","tr":"'et-","s":"853","sfull":"H0853","morph":"HTo","en":"<obj.>","pt":"—"},{"v":30,"n":16,"heb":"כָּל־","tr":"kol-","s":"3605","sfull":"H3605","morph":"HNcmsc","en":"all","pt":"todo"},{"v":30,"n":17,"heb":"יֶרֶק","tr":"Ye·rek","s":"3418","sfull":"H3418","morph":"HNcmsc","en":"greenery of","pt":"a relva de"},{"v":30,"n":18,"heb":"עֵשֶׂב","tr":"'E·sev","s":"6212","sfull":"H6212","morph":"HNcmsa","en":"plant[s]","pt":"as plantas"},{"v":30,"n":19,"heb":"לְאָכְלָה","tr":"le·'okh·Lah","s":"402","sfull":"H0402","morph":"HR/Ncfsa","en":"to food","pt":"para alimento"},{"v":30,"n":20,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and it was","pt":"e foi"},{"v":30,"n":21,"heb":"כֵֽן׃","tr":"Khen","s":"3651","sfull":"H3651C","morph":"HD","en":"so","pt":"assim"}]},{"ref":"1:31","cap":1,"vers":31,"palavras":[{"v":31,"n":1,"heb":"וַיַּרְא","tr":"vai·Yar'","s":"7200","sfull":"H7200G","morph":"Hc/Vqw3ms","en":"and he saw","pt":"e viu"},{"v":31,"n":2,"heb":"אֱלֹהִים","tr":"'E·lo·Him","s":"430","sfull":"H0430G","morph":"HNcmpa","en":"God","pt":"Deus"},{"v":31,"n":3,"heb":"אֶת־","tr":"'et-","s":"853","sfull":"H0853","morph":"HTo","en":"<obj.>","pt":"—"},{"v":31,"n":4,"heb":"כָּל־","tr":"kol-","s":"3605","sfull":"H3605","morph":"HNcmsa","en":"all","pt":"todo"},{"v":31,"n":5,"heb":"אֲשֶׁר","tr":"'a·Sher","s":"834","sfull":"H0834A","morph":"HTr","en":"that","pt":"que"},{"v":31,"n":6,"heb":"עָשָׂה","tr":"'a·Sah","s":"6213","sfull":"H6213H","morph":"HVqp3ms","en":"he had made","pt":"havia feito"},{"v":31,"n":7,"heb":"וְהִנֵּה־","tr":"ve·hi·neh-","s":"2009","sfull":"H2009","morph":"HC/Tj","en":"and there!","pt":"e eis que"},{"v":31,"n":8,"heb":"טוֹב","tr":"Tov","s":"2896","sfull":"H2896A","morph":"HAamsa","en":"[it was] good","pt":"era bom"},{"v":31,"n":9,"heb":"מְאֹד","tr":"me·'Od","s":"3966","sfull":"H3966","morph":"HAcmsa","en":"very","pt":"muito"},{"v":31,"n":10,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and there was","pt":"e houve"},{"v":31,"n":11,"heb":"עֶרֶב","tr":"'E·rev","s":"6153","sfull":"H6153","morph":"HNcmsa","en":"evening","pt":"tarde"},{"v":31,"n":12,"heb":"וַֽיְהִי־","tr":"vay·hi-","s":"1961","sfull":"H1961","morph":"Hc/Vqw3ms","en":"and there was","pt":"e houve"},{"v":31,"n":13,"heb":"בֹקֶר","tr":"Vo·ker","s":"1242","sfull":"H1242","morph":"HNcmsa","en":"morning","pt":"manhã"},{"v":31,"n":14,"heb":"יוֹם","tr":"Yom","s":"3117","sfull":"H3117G","morph":"HNcmsc","en":"[the] day","pt":"o dia"},{"v":31,"n":15,"heb":"הַשִּׁשִּֽׁי׃ פ","tr":"ha·shi·Shi","s":"8345","sfull":"H8345","morph":"HTd/Aomsa","en":"<the> sixth","pt":"o sexto"}]}]}</script>
+<script>
+const FALLBACK = JSON.parse(document.getElementById('data').textContent); // prévia offline: Gênesis 1
+const SUPA_URL = 'https://ghjbljypxksubmcsvaig.supabase.co';
+const SUPA_KEY = 'sb_publishable_qXCYqg1WdmelY9D1mptZXg_U8NdoKby'; // chave publicável: vai só no header apikey
+let BOOKS = [];                             // catálogo vindo da tabela 'livros'
+let curBook = {livro:'Gen', nome:'Gênesis', total_caps:50};
+let loadedCaps = [...new Set(FALLBACK.versos.map(v=>v.cap))];
+let curCap = loadedCaps[0] || 1;
+
+/* ---------- Léxico Strong (verbetes-chave em PT) ---------- */
+const STRONG_PT = {
+ "7225":"princípio, começo; a primeira e mais importante parte de algo.",
+ "1254":"criar, moldar. No Qal, exclusivo da ação criadora de Deus — chamar à existência.",
+ "430":"Deus (’Elohim). Plural de majestade que, com verbo no singular, aponta o único Deus verdadeiro.",
+ "853":"partícula que marca o objeto direto definido; não se traduz.",
+ "8064":"céus, firmamento, o alto; a esfera celeste.",
+ "776":"terra, chão, solo, país, mundo.",
+ "1961":"ser, existir, tornar-se, acontecer.",
+ "8414":"sem forma, vazio, informe; confusão, desolação.",
+ "922":"vacuidade, vazio; ruína.",
+ "2822":"escuridão, trevas.",
+ "5921":"sobre, acima, por cima de.",
+ "6440":"face, rosto, superfície, presença.",
+ "8415":"abismo, profundeza; as águas primordiais.",
+ "7307":"espírito, vento, sopro, fôlego; o Espírito de Deus.",
+ "7363":"pairar, mover-se sobre, chocar — como a ave sobre o ninho.",
+ "4325":"água, águas.",
+ "559":"dizer, falar, ordenar.",
+ "216":"luz, claridade, luminosidade.",
+ "7200":"ver, olhar, perceber, considerar.",
+ "3117":"dia; período de luz; tempo.",
+ "6960":"ajuntar-se, reunir-se; esperar.",
+ "1288":"abençoar, ajoelhar-se para bendizer.",
+ "6529":"fruto; produção, resultado.",
+ "2233":"semente, descendência, posteridade.",
+ "120":"homem, ser humano, humanidade (Adão).",
+ "3335":"formar, modelar (como o oleiro).",
+ "6754":"imagem, semelhança, estátua.",
+};
+
+/* ---------- Decodificador de morfologia (OSHB/STEPBible) -> PT ---------- */
+const POS={V:"Verbo",N:"Substantivo",A:"Adjetivo",C:"Conjunção",R:"Preposição",T:"Partícula",S:"Sufixo",P:"Pronome",D:"Advérbio"};
+const STEM={q:"Qal",N:"Nifal",p:"Piel",P:"Pual",h:"Hifil",H:"Hofal",t:"Hitpael",o:"Polel",r:"Poel",v:"Hitpolel"};
+const VTYPE={p:"Perfeito",q:"Perfeito consecutivo",i:"Imperfeito",w:"Imperfeito consecutivo (wayyiqtol)",j:"Jussivo",u:"Coortativo",v:"Imperativo",r:"Particípio ativo",s:"Particípio passivo",a:"Infinitivo absoluto",c:"Infinitivo construto"};
+const GEN={m:"masculino",f:"feminino",c:"comum",b:"comum"};
+const NUM={s:"singular",p:"plural",d:"dual"};
+const STATE={a:"absoluto",c:"construto",d:"determinado"};
+const PART={d:"Artigo definido",o:"Partícula de objeto direto (אֵת)",r:"Partícula relativa",c:"Partícula conjuntiva",j:"Partícula interrogativa",m:"Partícula demonstrativa",n:"Partícula negativa",e:"Partícula de ênfase"};
+
+function decodeSeg(seg){
+  if(!seg) return "";
+  let p=seg[0], rest=seg.slice(1);
+  if(p==="C"||p==="c") return "Conjunção (waw “e”)";
+  if(p==="R"){ return rest==="d" ? "Preposição + artigo" : "Preposição"; }
+  if(p==="T"){ return PART[rest]||"Partícula"; }
+  if(p==="D") return "Advérbio";
+  if(p==="S"){ // sufixo, ex.: Sp3ms
+    let m=rest.match(/p?(\d)([mfcb])([spd])/);
+    if(m) return `Sufixo pronominal — ${m[1]}ª pessoa ${GEN[m[2]]} ${NUM[m[3]]}`;
+    return "Sufixo pronominal";
+  }
+  if(p==="V"){
+    let stem=STEM[rest[0]]||"", t=rest[1], out=`Verbo — ${stem}`.trim();
+    if(VTYPE[t]) out+=`, ${VTYPE[t]}`;
+    let pf=rest.slice(2), pm=pf.match(/(\d)?([mfcb])?([spd])?/);
+    if(pm && (pm[1]||pm[2]||pm[3])){
+      let bits=[]; if(pm[1])bits.push(`${pm[1]}ª pessoa`); if(pm[2])bits.push(GEN[pm[2]]); if(pm[3])bits.push(NUM[pm[3]]);
+      if(bits.length) out+=`, ${bits.join(" ")}`;
+    }
+    return out;
+  }
+  if(p==="N"){
+    let ty=rest[0]==="p"?"próprio":"comum", g=rest[1],n=rest[2],st=rest[3];
+    let out=`Substantivo ${ty}`; let bits=[];
+    if(GEN[g])bits.push(GEN[g]); if(NUM[n])bits.push(NUM[n]);
+    if(bits.length) out+=` — ${bits.join(" ")}`;
+    if(STATE[st]) out+=`, ${STATE[st]}`;
+    return out;
+  }
+  if(p==="A"){
+    let ty={a:"Adjetivo",c:"Numeral cardinal",o:"Numeral ordinal",g:"Gentílico"}[rest[0]]||"Adjetivo";
+    let g=rest[1],n=rest[2],st=rest[3],bits=[];
+    if(GEN[g])bits.push(GEN[g]); if(NUM[n])bits.push(NUM[n]);
+    let out=ty; if(bits.length)out+=` — ${bits.join(" ")}`; if(STATE[st])out+=`, ${STATE[st]}`;
+    return out;
+  }
+  if(p==="P") return "Pronome";
+  return seg;
+}
+function decodeMorph(code){
+  let lang = code[0]==="A" ? "aramaico" : "hebraico";
+  let body = code.replace(/^[HA]/,"");
+  return body.split("/").map(decodeSeg).filter(Boolean).join("  +  ");
+}
+
+/* ---------- Render ---------- */
+const textEl=document.getElementById('text');
+const chTitle=document.getElementById('ch-title');
+const CH={};                                 // cache por capítulo
+function versesOf(cap){ return CH[cap]||[]; }
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function groupRows(rows,cap){
+  const by={};
+  rows.forEach(r=>{(by[r.vers]=by[r.vers]||[]).push({v:r.vers,n:r.ord,heb:r.heb,tr:r.tr,s:r.strong,sfull:r.sfull,morph:r.morph,en:r.en,pt:r.pt});});
+  return Object.keys(by).map(Number).sort((a,b)=>a-b)
+    .map(v=>({ref:curBook.livro+' '+cap+':'+v,cap,vers:v,palavras:by[v].sort((a,b)=>a.n-b.n)}));
+}
+async function ensureChapter(cap){
+  if(CH[cap]) return;
+  if(SUPA_URL){
+    try{
+      const url=`${SUPA_URL}/rest/v1/interlinear?livro=eq.${curBook.livro}&cap=eq.${cap}&order=vers.asc,ord.asc&select=*`;
+      const r=await fetch(url,{headers:{apikey:SUPA_KEY}});
+      if(r.ok){ const rows=await r.json(); if(rows.length){ CH[cap]=groupRows(rows,cap); return; } }
+    }catch(e){}
+  }
+  CH[cap]= curBook.livro==='Gen' ? FALLBACK.versos.filter(v=>v.cap===cap) : [];   // reserva local só p/ Gênesis
+}
+
+function autoReading(pal){
+  return pal.map(w=>w.pt).filter(x=>x&&x!=="—").map(x=>x==="e —"?"e":x).join(" ")
+           .replace(/\s+/g," ").replace(/^./,c=>c.toUpperCase()) + ".";
+}
+
+async function render(cap){
+  curCap=cap; chTitle.textContent=curBook.nome+" "+cap;
+  document.body.classList.toggle('grc', curBook.idioma==='grc');
+  const isGen1 = curBook.livro==='Gen' && cap===1;
+  document.querySelector('.section-title').style.display = isGen1?'block':'none';
+  document.getElementById('xrefs').style.display = isGen1?'block':'none';
+  textEl.innerHTML=`<div class="placeholder"><span class="big">Gênesis ${cap}</span>Carregando…</div>`;
+  try{ await ensureChapter(cap); }catch(e){}
+  if(cap!==curCap) return;               // usuário já mudou de capítulo
+  const vs=versesOf(cap);
+  if(!vs.length){
+    textEl.innerHTML=`<div class="placeholder"><span class="big">Capítulo ${cap}</span>Este capítulo ainda não está disponível no banco.</div>`;
+  }else{
+    textEl.innerHTML=vs.map(vv=>{
+      const ICO='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>';
+      const ICOV='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+      const cards=vv.palavras.map((w,i)=>`
+        <button class="word" data-c="${vv.cap}" data-v="${vv.vers}" data-i="${i}" aria-label="${esc(w.pt||w.en)} — Strong ${esc(w.s)}">
+          <span class="spk" data-spk="${vv.cap}|${vv.vers}|${i}" role="button" tabindex="-1" aria-label="Ouvir palavra" title="Ouvir">${ICO}</span>
+          <div class="strong">${esc(w.s)}</div>
+          <div class="heb">${esc(w.heb)}</div>
+          <div class="translit">${esc(w.tr)}</div>
+          <div class="gloss${w.pt==='—'?' marker':''}">${esc(w.pt||w.en)}</div>
+          <div class="gloss-en">${esc(w.en)}</div>
+          <div class="morph">${esc(w.morph.replace(/\//g,'·'))}</div>
+        </button>`).join('');
+      return `<section class="verse" id="v-${vv.cap}-${vv.vers}" data-verse="${vv.vers}">
+        <div class="verse-flow"><div class="vnum">${vv.vers}</div>${cards}<button class="spk-verse" data-spkv="${vv.cap}|${vv.vers}" title="Ouvir o versículo" aria-label="Ouvir o versículo inteiro">${ICOV}</button></div>
+        <div class="reading"><span class="rlabel">Leitura — palavra a palavra</span>${esc(autoReading(vv.palavras))}</div>
+      </section>`;
+    }).join('');
+  }
+  buildVerseGrid();
+  updateChapNav();
+  salvarPosicao();
+  if(document.body.classList.contains('mobile')){ cur=0; setupPager(); }
+}
+function updateChapNav(){
+  document.getElementById('ch-prev').disabled = !loadedCaps.includes(curCap-1);
+  document.getElementById('ch-next').disabled = !loadedCaps.includes(curCap+1);
+}
+
+const LEX={};                                // cache do léxico (por Strong com prefixo H/G)
+async function fetchLex(w){
+  const chave = (w.sfull && /^[HG]/.test(w.sfull)) ? w.sfull.replace(/[^0-9A-Za-z]/g,'') : 'H'+w.s;
+  if(LEX[chave]!==undefined) return LEX[chave];
+  if(STRONG_PT[w.s] && chave[0]==='H'){ LEX[chave]=STRONG_PT[w.s]; return LEX[chave]; }
+  try{
+    const r=await fetch(`${SUPA_URL}/rest/v1/lexico?strong=in.("${chave}","${w.s}")&select=strong,definicao`,{headers:{apikey:SUPA_KEY}});
+    if(r.ok){ const j=await r.json();
+      const exato=j.find(x=>x.strong===chave) || (chave[0]==='H'?j.find(x=>x.strong===String(w.s)):null);
+      LEX[chave]= exato&&exato.definicao ? exato.definicao : null;
+    } else LEX[chave]=null;
+  }catch(e){ LEX[chave]=null; }
+  return LEX[chave];
+}
+
+/* ---------- Decodificador de morfologia GREGA (TAGNT) -> PT ---------- */
+const G_CASE={N:"nominativo",G:"genitivo",D:"dativo",A:"acusativo",V:"vocativo"};
+const G_NUM={S:"singular",P:"plural"};
+const G_GEN={M:"masculino",F:"feminino",N:"neutro"};
+const G_TENSE={P:"Presente",I:"Imperfeito",F:"Futuro",A:"Aoristo",X:"Perfeito",Y:"Mais-que-perfeito",R:"Perfeito"};
+const G_VOICE={A:"ativa",M:"média",P:"passiva",E:"média/passiva",D:"depoente",O:"média ou passiva"};
+const G_MOOD={I:"Indicativo",S:"Subjuntivo",O:"Optativo",M:"Imperativo",N:"Infinitivo",P:"Particípio"};
+const G_POS={"N":"Substantivo","A":"Adjetivo","T":"Artigo","P":"Pronome pessoal","R":"Pronome relativo",
+ "D":"Pronome demonstrativo","K":"Pronome correlativo","I":"Pronome interrogativo","X":"Pronome indefinido",
+ "F":"Pronome reflexivo","S":"Pronome possessivo","Q":"Pronome correlativo/interrogativo","C":"Pronome recíproco",
+ "PREP":"Preposição","CONJ":"Conjunção","ADV":"Advérbio","PRT":"Partícula","INJ":"Interjeição","COND":"Partícula condicional",
+ "V":"Verbo","ARAM":"Palavra aramaica","HEB":"Palavra hebraica"};
+
+function decodeGreek(code){
+  if(!code) return "";
+  const c=code.trim();
+  for(const k of ["PREP","CONJ","ADV","PRT","INJ","COND","ARAM","HEB"]) if(c===k||c.startsWith(k+"-")) return G_POS[k];
+  const p=c.split("-");
+  // Verbo: V-IAI-3S / V-PAP-NSM …
+  if(p[0]==="V"){
+    const tvm=p[1]||"", pn=p[2]||"";
+    let out="Verbo";
+    const t=G_TENSE[tvm[0]], vo=G_VOICE[tvm[1]], mo=G_MOOD[tvm[2]];
+    if(mo) out+=` — ${mo}`;
+    if(t) out+=`, ${t}`;
+    if(vo) out+=`, voz ${vo}`;
+    if(mo==="Particípio"||mo==="Infinitivo"){
+      const g=G_GEN[pn[1]],n=G_NUM[pn[2]],cs=G_CASE[pn[0]];
+      const bits=[cs,g,n].filter(Boolean);
+      if(bits.length) out+=`, ${bits.join(" ")}`;
+    }else{
+      const pe=pn[0], nu=G_NUM[pn[1]];
+      if(pe&&/\d/.test(pe)) out+=`, ${pe}ª pessoa`;
+      if(nu) out+=` ${nu}`;
+    }
+    return out;
+  }
+  // Nominais: N-DSF / T-NSM / A-GPM …
+  const base=G_POS[p[0]]||p[0];
+  const f=p[1]||"";
+  const cs=G_CASE[f[0]], nu=G_NUM[f[1]], ge=G_GEN[f[2]];
+  const bits=[cs,ge,nu].filter(Boolean);
+  return bits.length ? `${base} — ${bits.join(" ")}` : base;
+}
+function isGreek(w){ return (w.sfull&&w.sfull[0]==='G') || w.lang==='grc' || (curBook.idioma==='grc'); }
+
+/* ============================================================
+   ÁUDIO (TTS) — voz do próprio aparelho, sem custo/servidor
+   Hebraico: voz he-IL (hebraico moderno).
+   Grego: as vozes de grego do sistema leem GREGO MODERNO (itacismo).
+   Para a pronúncia ERASMIANA, convertemos a palavra numa grafia
+   fonética e usamos uma voz ESPANHOLA (castelhano), que possui
+   justamente os sons θ (z/c) e χ (j) e vogais puras.
+   ============================================================ */
+let VOICES=[];
+function loadVoices(){ VOICES=window.speechSynthesis?speechSynthesis.getVoices():[]; }
+if(window.speechSynthesis){ loadVoices(); speechSynthesis.onvoiceschanged=loadVoices; }
+function pickVoice(prefixos){
+  if(!VOICES.length) loadVoices();          // a lista às vezes chega vazia na 1ª vez
+  for(const p of prefixos){
+    const v=VOICES.find(v=>v.lang&&v.lang.toLowerCase().startsWith(p));
+    if(v) return v;
+  }
+  return null;
+}
+/* tira maqqef, sof pasuq e afins, que a voz lê como ruído */
+function limpaFalaHeb(t){
+  return (t||'').replace(/[\u05BE]/g,' ').replace(/[\u05C0\u05C3\u05C6\u05F3\u05F4׃׀]/g,'').replace(/\s+/g,' ').trim();
+}
+
+/* --- Grego -> grafia erasmiana aproximada (lida por voz espanhola) --- */
+const DIGRAF=[["γγ","ng"],["γκ","nk"],["γχ","nj"],["γξ","nx"],
+  ["ου","u"],["αυ","au"],["ευ","eu"],["ηυ","eu"],
+  ["αι","ai"],["ει","ei"],["οι","oi"],["υι","ui"],
+  ["θ","z"],  /* z castelhano = som "th" */
+  ["χ","j"],  /* j castelhano = som "kh" */
+  ["φ","f"],["ψ","ps"],["ξ","x"],["ζ","ds"]];
+const LETRA={"α":"a","β":"b","γ":"g","δ":"d","ε":"e","η":"e","ι":"i","κ":"k","λ":"l","μ":"m",
+  "ν":"n","ο":"o","π":"p","ρ":"r","σ":"s","ς":"s","τ":"t","υ":"u","ω":"o"};
+function erasmiano(txt){
+  let s=txt.normalize('NFD');
+  const aspero=/\u0314/.test(s);                 // espírito rude -> h inicial
+  s=s.replace(/[\u0300-\u036f]/g,'').toLowerCase(); // tira acentos/espíritos
+  for(const [a,b] of DIGRAF) s=s.split(a).join(b);
+  s=[...s].map(c=>LETRA[c]!==undefined?LETRA[c]:c).join('');
+  s=s.replace(/[^a-z]/g,'');
+  if(aspero) s='j'+s;                            // aspiração inicial
+  return s;
+}
+/* --- Hebraico: limpa a transliteração para leitura de reserva --- */
+function translitLimpa(tr){
+  return (tr||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/·/g,'').replace(/[ʾʿ’‘']/g,'').replace(/ə/g,'e').trim();
+}
+
+/* Monta o texto a ser falado (uma palavra ou o versículo inteiro, contínuo) */
+function montarFala(itens){
+  const grego = curBook.idioma==='grc';
+  const vNativa = grego ? pickVoice(['el']) : pickVoice(['he','iw']);
+  const vEsp    = pickVoice(['es-es','es']);
+  let voz, lang, partes;
+  if(grego){
+    if(vEsp){ voz=vEsp; lang='es-ES'; partes=itens.map(w=>erasmiano(w.heb)); }
+    else if(vNativa){ voz=vNativa; lang='el-GR'; partes=itens.map(w=>w.heb); }
+  }else{
+    if(vNativa){ voz=vNativa; lang='he-IL'; partes=itens.map(w=>limpaFalaHeb(w.heb)); }
+    else if(vEsp){ voz=vEsp; lang='es-ES'; partes=itens.map(w=>translitLimpa(w.tr)); }
+  }
+  if(!voz) return null;
+  const texto = partes.filter(Boolean).join(' ').replace(/\s+/g,' ').trim();  // fala contínua
+  return texto ? {texto,voz,lang} : null;
+}
+
+/* Velocidade da leitura (guardada no aparelho) */
+let RATE = parseFloat(localStorage.getItem('interlinear_rate') || '0.4');
+const rateBtns=[...document.querySelectorAll('.rate-btn')];
+function pintaRate(){
+  rateBtns.forEach(b=>b.classList.toggle('active', parseFloat(b.dataset.rate)===RATE));
+}
+rateBtns.forEach(b=>b.addEventListener('click',()=>{
+  RATE=parseFloat(b.dataset.rate); pintaRate();
+  try{ localStorage.setItem('interlinear_rate',String(RATE)); }catch(e){}
+}));
+pintaRate();
+
+let ultimaFala=0;
+function falar(itens){
+  const S=window.speechSynthesis;
+  if(!S){ showToast('Este navegador não permite áudio.'); return; }
+  const f=montarFala(itens);
+  if(!f){ showToast(curBook.idioma==='grc'?'Nenhuma voz disponível para grego.':'Nenhuma voz de hebraico instalada neste aparelho.'); return; }
+
+  S.cancel();
+  if(S.paused) S.resume();              // destrava se o motor ficou preso
+
+  const disparar=()=>{
+    const u=new SpeechSynthesisUtterance(f.texto);
+    u.voice=f.voz; u.lang=f.lang; u.rate=RATE; u.pitch=1; u.volume=1;
+    u.onerror=()=>{ try{S.cancel();}catch(e){} };
+    const keep=setInterval(()=>{ if(S.speaking){ S.pause(); S.resume(); } else clearInterval(keep); },9000);
+    u.onend=()=>clearInterval(keep);
+    S.speak(u);
+    const t0=Date.now(); ultimaFala=t0;
+    setTimeout(()=>{
+      if(ultimaFala===t0 && !S.speaking && !S.pending){
+        try{ S.cancel(); S.resume();
+          const u2=new SpeechSynthesisUtterance(f.texto);
+          u2.voice=f.voz; u2.lang=f.lang; u2.rate=RATE;
+          S.speak(u2);
+        }catch(e){}
+      }
+    },300);
+  };
+  setTimeout(disparar, 90);
+}
+function avisoVoz(){
+  const grego = curBook.idioma==='grc';
+  if(grego && !pickVoice(['es','el'])) return 'Sem voz disponível para grego.';
+  if(!grego && !pickVoice(['he','iw','es'])) return 'Sem voz de hebraico instalada.';
+  return '';
+}
+
+/* ---------- Modal da palavra ---------- */
+const overlay=document.getElementById('overlay');
+async function openWord(w){
+  document.getElementById('m-strong').textContent="Strong nº "+w.s;
+  document.getElementById('m-heb').textContent=w.heb;
+  document.getElementById('m-translit').textContent=w.tr;
+  document.getElementById('m-gloss').textContent=w.pt==='—'?'(sem tradução)':(w.pt||w.en);
+  document.getElementById('m-glossen').textContent="Inglês: "+w.en;
+  document.getElementById('m-morph').textContent = isGreek(w) ? decodeGreek(w.morph) : decodeMorph(w.morph);
+  document.getElementById('m-morphcode').textContent="Código: "+w.morph;
+  const def=document.getElementById('m-def');
+  def.textContent='Carregando…';
+  const aviso=avisoVoz();
+  document.getElementById('m-spk').onclick=()=>falar([w]);
+  document.getElementById('m-spk').style.display = aviso?'none':'inline-flex';
+  document.getElementById('m-spknote').textContent = aviso ||
+    (curBook.idioma==='grc' ? 'Pronúncia erasmiana aproximada.' : 'Pronúncia do hebraico (voz do aparelho).');
+  overlay.classList.add('open');
+  const d=await fetchLex(w);
+  def.textContent = d || 'Definição ainda não disponível para este Strong.';
+}
+textEl.addEventListener('click',e=>{
+  const sv=e.target.closest('[data-spkv]');           // ouvir versículo inteiro
+  if(sv){ e.stopPropagation();
+    const [c,v]=sv.dataset.spkv.split('|').map(Number);
+    const vv=versesOf(c).find(x=>x.vers===v);
+    if(vv) falar(vv.palavras.filter(w=>w.heb));
+    return; }
+  const sp=e.target.closest('[data-spk]');            // ouvir uma palavra
+  if(sp){ e.stopPropagation();
+    const [c,v,i]=sp.dataset.spk.split('|').map(Number);
+    const vv=versesOf(c).find(x=>x.vers===v);
+    if(vv) falar([vv.palavras[i]]);
+    return; }
+  const c=e.target.closest('.word'); if(!c)return;
+  const vv=versesOf(+c.dataset.c).find(x=>x.vers===+c.dataset.v);
+  openWord(vv.palavras[+c.dataset.i]);
+});
+document.getElementById('m-close').onclick=()=>{overlay.classList.remove('open');if(window.speechSynthesis)speechSynthesis.cancel();};
+overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('open')});
+
+/* ---------- Busca / ir para ---------- */
+const sOverlay=document.getElementById('search-overlay');
+function openSearch(){ document.getElementById('book-sel').value=curBook.livro; buildChapGrid(); sOverlay.classList.add('open'); setTimeout(()=>document.getElementById('ref-text').focus(),80); }
+function closeSearch(){ sOverlay.classList.remove('open'); }
+document.getElementById('btn-search').onclick=openSearch;
+chTitle.onclick=openSearch;
+document.getElementById('s-close').onclick=closeSearch;
+sOverlay.addEventListener('click',e=>{if(e.target===sOverlay)closeSearch()});
+
+function buildBookSel(){
+  const sel=document.getElementById('book-sel'); if(!sel)return;
+  sel.innerHTML=BOOKS.map(b=>`<option value="${b.livro}">${b.nome}</option>`).join('');
+  sel.value=curBook.livro;
+  sel.onchange=()=>switchBook(sel.value);
+}
+async function switchBook(livro){
+  const b=BOOKS.find(x=>x.livro===livro); if(!b||b.livro===curBook.livro) return;
+  curBook=b; loadedCaps=Array.from({length:b.total_caps},(_,i)=>i+1); cur=0;
+  for(const k in CH) delete CH[k];      // limpa o cache do livro anterior
+  await render(1); buildChapGrid();
+}
+function buildChapGrid(){
+  const g=document.getElementById('chap-grid'); g.innerHTML='';
+  for(let c=1;c<=curBook.total_caps;c++){
+    const b=document.createElement('button');
+    b.className='chip'+(c===curCap?' active':''); b.textContent=c;
+    b.disabled=!loadedCaps.includes(c);
+    if(b.disabled) b.title='Em breve';
+    b.onclick=()=>{ if(!b.disabled){ render(c); buildChapGrid(); } };
+    g.appendChild(b);
+  }
+}
+function buildVerseGrid(){
+  const g=document.getElementById('verse-grid'); if(!g)return; g.innerHTML='';
+  versesOf(curCap).forEach(vv=>{
+    const b=document.createElement('button'); b.className='chip'; b.textContent=vv.vers;
+    b.onclick=()=>{ jumpToVerse(curCap,vv.vers); closeSearch(); };
+    g.appendChild(b);
+  });
+}
+async function jumpToVerse(cap,vers){
+  if(cap!==curCap){ if(!loadedCaps.includes(cap)){showToast('Capítulo '+cap+' indisponível.');return;} await render(cap); }
+  if(document.body.classList.contains('mobile')){
+    const idx=versesOf(curCap).findIndex(v=>v.vers===vers); if(idx>=0){cur=idx;paint();}
+  }else{
+    const el=document.getElementById(`v-${cap}-${vers}`);
+    if(el){ el.scrollIntoView({behavior:'smooth',block:'start'});
+      const first=el.querySelector('.word'); if(first){first.classList.add('hl');setTimeout(()=>first.classList.remove('hl'),1600);} }
+  }
+}
+document.getElementById('ref-go').onclick=doRefJump;
+document.getElementById('ref-text').addEventListener('keydown',e=>{if(e.key==='Enter')doRefJump();});
+function doRefJump(){
+  const t=document.getElementById('ref-text').value.trim();
+  let m=t.match(/^(\d+)\s*[:.\s]\s*(\d+)$/)||t.match(/^(\d+)$/);
+  if(!m){showToast('Use o formato capítulo:versículo — ex.: 1:5');return;}
+  const cap=m[2]?+m[1]:curCap, vers=m[2]?+m[2]:+m[1];
+  const vv=loadedCaps.includes(cap)&&versesOf(cap).some(v=>v.vers===vers);
+  if(!vv){showToast('Referência não encontrada (Gênesis '+cap+':'+vers+').');return;}
+  jumpToVerse(cap,vers); closeSearch();
+}
+document.querySelectorAll('[data-jump]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();showToast('Referências paralelas (João / Hebreus) entram quando carregarmos o NT.');}));
+
+/* ---------- Toggles / tema ---------- */
+document.getElementById('t-translit').addEventListener('click',function(){const on=this.getAttribute('aria-pressed')==='true';this.setAttribute('aria-pressed',String(!on));document.body.classList.toggle('hide-translit',on);});
+function toggleBody(id,cls){const b=document.getElementById(id);b.addEventListener('click',()=>{const on=b.getAttribute('aria-pressed')==='true';b.setAttribute('aria-pressed',String(!on));document.body.classList.toggle(cls,!on);});}
+toggleBody('t-en','show-en'); toggleBody('t-reading','show-reading');
+const themeBtn=document.getElementById('t-theme'),ico=document.getElementById('theme-ico');
+const sun='<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+const moon='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+themeBtn.addEventListener('click',()=>{const dark=document.documentElement.getAttribute('data-theme')==='dark';document.documentElement.setAttribute('data-theme',dark?'light':'dark');ico.innerHTML=dark?moon:sun;});
+
+/* ---------- Navegação de capítulo ---------- */
+document.getElementById('ch-prev').onclick=()=>{ if(loadedCaps.includes(curCap-1))render(curCap-1); };
+document.getElementById('ch-next').onclick=()=>{ loadedCaps.includes(curCap+1)?render(curCap+1):showToast('Capítulo '+(curCap+1)+' em breve.'); };
+
+/* ---------- Toast ---------- */
+const toast=document.getElementById('toast');let tt;
+function showToast(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>toast.classList.remove('show'),2600);}
+
+/* ---------- Pager mobile ---------- */
+const pCount=document.getElementById('p-count'),pPrev=document.getElementById('p-prev'),pNext=document.getElementById('p-next');
+let cur=0,verseEls=[];
+function setupPager(){ verseEls=[...textEl.querySelectorAll('.verse')]; if(cur>verseEls.length-1)cur=0; paint(); }
+function paint(){
+  verseEls.forEach((el,i)=>el.classList.toggle('active',i===cur));
+  if(verseEls[cur]){ pCount.textContent=curBook.nome+' '+curCap+':'+verseEls[cur].dataset.verse; window.scrollTo({top:0}); }
+  pPrev.disabled=cur===0; pNext.disabled=cur===verseEls.length-1;
+}
+pPrev.onclick=()=>{if(cur>0){cur--;paint();}};
+pNext.onclick=()=>{if(cur<verseEls.length-1){cur++;paint();}};
+pCount.onclick=openSearch;
+const mql=window.matchMedia('(max-width:640px)');
+function applyMode(){ if(mql.matches){document.body.classList.add('mobile');setupPager();}else{document.body.classList.remove('mobile');verseEls.forEach(el=>el.classList.remove('active'));} }
+mql.addEventListener('change',applyMode);
+
+/* ================= TELA DE ENTRADA ================= */
+function irParaInicio(){
+  document.body.classList.add('home');
+  if(window.speechSynthesis) speechSynthesis.cancel();
+  window.scrollTo({top:0});
+  pintaContinuar();
+}
+async function abrirLivro(livro,cap){
+  const b=BOOKS.find(x=>x.livro===livro); if(!b) return;
+  curBook=b; loadedCaps=Array.from({length:b.total_caps},(_,i)=>i+1); cur=0;
+  for(const k in CH) delete CH[k];
+  document.body.classList.remove('home');
+  window.scrollTo({top:0});
+  await render(cap||1);
+  buildBookSel(); buildChapGrid(); applyMode();
+}
+function salvarPosicao(){
+  try{ localStorage.setItem('intertextus_ultimo', JSON.stringify({livro:curBook.livro,nome:curBook.nome,cap:curCap})); }catch(e){}
+}
+function pintaContinuar(){
+  let u=null;
+  try{ u=JSON.parse(localStorage.getItem('intertextus_ultimo')||'null'); }catch(e){}
+  const btn=document.getElementById('h-continue');
+  if(u && BOOKS.some(b=>b.livro===u.livro)){
+    document.getElementById('h-continue-txt').textContent=`Continuar — ${u.nome} ${u.cap}`;
+    btn.style.display='inline-flex';
+    btn.onclick=()=>abrirLivro(u.livro,u.cap);
+  }else btn.style.display='none';
+}
+function montarInicio(){
+  const at=BOOKS.filter(b=>b.idioma!=='grc').sort((a,b)=>(a.ordem||0)-(b.ordem||0));
+  const nt=BOOKS.filter(b=>b.idioma==='grc').sort((a,b)=>(a.ordem||0)-(b.ordem||0));
+  const cria=(lista,alvo,secao)=>{
+    const g=document.getElementById(alvo);
+    if(!lista.length){ document.getElementById(secao).style.display='none'; return; }
+    document.getElementById(secao).style.display='block';
+    g.innerHTML=lista.map(b=>`<button class="book" data-book="${esc(b.livro)}">
+        <span class="bn">${esc(b.nome)}</span>
+        <span class="bc">${b.total_caps} ${b.total_caps>1?'capítulos':'capítulo'}</span>
+      </button>`).join('');
+    g.querySelectorAll('.book').forEach(el=>el.onclick=()=>abrirLivro(el.dataset.book,1));
+  };
+  cria(at,'grid-at','h-at'); cria(nt,'grid-nt','h-nt');
+  const caps=BOOKS.reduce((a,b)=>a+(b.total_caps||0),0);
+  document.getElementById('h-stats').innerHTML=
+    `<span>${BOOKS.length} livros</span><span>${caps} capítulos</span><span>${nt.length?'Hebraico e Grego':'Hebraico'}</span>`;
+  pintaContinuar();
+}
+document.getElementById('btn-home').onclick=irParaInicio;
+document.getElementById('h-search').onclick=async()=>{
+  if(!BOOKS.length) return;
+  if(!curBook || !BOOKS.some(b=>b.livro===curBook.livro)) curBook=BOOKS[0];
+  await abrirLivro(curBook.livro,1);
+  openSearch();
+};
+document.getElementById('h-theme').onclick=()=>document.getElementById('t-theme').click();
+
+/* ---------- Início: lê o catálogo de livros do Supabase ---------- */
+async function boot(){
+  if(SUPA_URL){
+    try{
+      const r=await fetch(`${SUPA_URL}/rest/v1/livros?select=*&order=ordem.asc,nome.asc`,{headers:{apikey:SUPA_KEY}});
+      if(r.ok){ const j=await r.json(); if(j.length) BOOKS=j; }
+    }catch(e){}
+  }
+  if(!BOOKS.length) BOOKS=[{livro:'Gen',nome:'Gênesis',total_caps:Math.max(...FALLBACK.versos.map(v=>v.cap)),idioma:'heb'}];
+  curBook = BOOKS.find(b=>b.livro==='Gen') || BOOKS[0];
+  loadedCaps = Array.from({length:curBook.total_caps},(_,i)=>i+1);
+  buildBookSel();
+  curCap=1;
+  montarInicio();                       // abre na tela de entrada, não em Gênesis
+}
+boot();
+</script>
+</body>
+</html>
