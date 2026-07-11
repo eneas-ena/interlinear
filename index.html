@@ -85,6 +85,12 @@
   body.show-en .gloss-en{display:block}
   .morph{margin-top:8px;padding-top:7px;border-top:1px dashed var(--line);font-family:"Cinzel",serif;font-size:9.5px;letter-spacing:.03em;color:var(--muted);}
 
+  /* Grego: esquerda→direita, fonte serifada clássica */
+  body.grc .verse-flow{direction:ltr}
+  body.grc .heb{direction:ltr;font-family:"Cormorant Garamond","Frank Ruhl Libre",serif;font-size:27px;font-weight:600}
+  body.grc .m-heb{direction:ltr;font-family:"Cormorant Garamond",serif;font-size:38px;font-weight:600;text-align:left}
+  body.grc .vnum{margin-inline-end:2px}
+
   .placeholder{text-align:center;padding:80px 20px;color:var(--muted);font-style:italic;font-size:20px}
   .placeholder .big{font-family:"Cinzel",serif;font-style:normal;font-size:15px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;display:block}
 
@@ -350,6 +356,7 @@ function autoReading(pal){
 
 async function render(cap){
   curCap=cap; chTitle.textContent=curBook.nome+" "+cap;
+  document.body.classList.toggle('grc', curBook.idioma==='grc');
   const isGen1 = curBook.livro==='Gen' && cap===1;
   document.querySelector('.section-title').style.display = isGen1?'block':'none';
   document.getElementById('xrefs').style.display = isGen1?'block':'none';
@@ -385,17 +392,66 @@ function updateChapNav(){
   document.getElementById('ch-next').disabled = !loadedCaps.includes(curCap+1);
 }
 
-const LEX={};                                // cache do léxico (por Strong)
-async function fetchLex(strong){
-  if(LEX[strong]!==undefined) return LEX[strong];
-  if(STRONG_PT[strong]){ LEX[strong]=STRONG_PT[strong]; return LEX[strong]; }
+const LEX={};                                // cache do léxico (por Strong com prefixo H/G)
+async function fetchLex(w){
+  const chave = (w.sfull && /^[HG]/.test(w.sfull)) ? w.sfull.replace(/[^0-9A-Za-z]/g,'') : 'H'+w.s;
+  if(LEX[chave]!==undefined) return LEX[chave];
+  if(STRONG_PT[w.s] && chave[0]==='H'){ LEX[chave]=STRONG_PT[w.s]; return LEX[chave]; }
   try{
-    const r=await fetch(`${SUPA_URL}/rest/v1/lexico?strong=eq.${encodeURIComponent(strong)}&select=definicao`,{headers:{apikey:SUPA_KEY}});
-    if(r.ok){ const j=await r.json(); LEX[strong]= j[0]&&j[0].definicao ? j[0].definicao : null; }
-    else LEX[strong]=null;
-  }catch(e){ LEX[strong]=null; }
-  return LEX[strong];
+    const r=await fetch(`${SUPA_URL}/rest/v1/lexico?strong=in.("${chave}","${w.s}")&select=strong,definicao`,{headers:{apikey:SUPA_KEY}});
+    if(r.ok){ const j=await r.json();
+      const exato=j.find(x=>x.strong===chave) || (chave[0]==='H'?j.find(x=>x.strong===String(w.s)):null);
+      LEX[chave]= exato&&exato.definicao ? exato.definicao : null;
+    } else LEX[chave]=null;
+  }catch(e){ LEX[chave]=null; }
+  return LEX[chave];
 }
+
+/* ---------- Decodificador de morfologia GREGA (TAGNT) -> PT ---------- */
+const G_CASE={N:"nominativo",G:"genitivo",D:"dativo",A:"acusativo",V:"vocativo"};
+const G_NUM={S:"singular",P:"plural"};
+const G_GEN={M:"masculino",F:"feminino",N:"neutro"};
+const G_TENSE={P:"Presente",I:"Imperfeito",F:"Futuro",A:"Aoristo",X:"Perfeito",Y:"Mais-que-perfeito",R:"Perfeito"};
+const G_VOICE={A:"ativa",M:"média",P:"passiva",E:"média/passiva",D:"depoente",O:"média ou passiva"};
+const G_MOOD={I:"Indicativo",S:"Subjuntivo",O:"Optativo",M:"Imperativo",N:"Infinitivo",P:"Particípio"};
+const G_POS={"N":"Substantivo","A":"Adjetivo","T":"Artigo","P":"Pronome pessoal","R":"Pronome relativo",
+ "D":"Pronome demonstrativo","K":"Pronome correlativo","I":"Pronome interrogativo","X":"Pronome indefinido",
+ "F":"Pronome reflexivo","S":"Pronome possessivo","Q":"Pronome correlativo/interrogativo","C":"Pronome recíproco",
+ "PREP":"Preposição","CONJ":"Conjunção","ADV":"Advérbio","PRT":"Partícula","INJ":"Interjeição","COND":"Partícula condicional",
+ "V":"Verbo","ARAM":"Palavra aramaica","HEB":"Palavra hebraica"};
+
+function decodeGreek(code){
+  if(!code) return "";
+  const c=code.trim();
+  for(const k of ["PREP","CONJ","ADV","PRT","INJ","COND","ARAM","HEB"]) if(c===k||c.startsWith(k+"-")) return G_POS[k];
+  const p=c.split("-");
+  // Verbo: V-IAI-3S / V-PAP-NSM …
+  if(p[0]==="V"){
+    const tvm=p[1]||"", pn=p[2]||"";
+    let out="Verbo";
+    const t=G_TENSE[tvm[0]], vo=G_VOICE[tvm[1]], mo=G_MOOD[tvm[2]];
+    if(mo) out+=` — ${mo}`;
+    if(t) out+=`, ${t}`;
+    if(vo) out+=`, voz ${vo}`;
+    if(mo==="Particípio"||mo==="Infinitivo"){
+      const g=G_GEN[pn[1]],n=G_NUM[pn[2]],cs=G_CASE[pn[0]];
+      const bits=[cs,g,n].filter(Boolean);
+      if(bits.length) out+=`, ${bits.join(" ")}`;
+    }else{
+      const pe=pn[0], nu=G_NUM[pn[1]];
+      if(pe&&/\d/.test(pe)) out+=`, ${pe}ª pessoa`;
+      if(nu) out+=` ${nu}`;
+    }
+    return out;
+  }
+  // Nominais: N-DSF / T-NSM / A-GPM …
+  const base=G_POS[p[0]]||p[0];
+  const f=p[1]||"";
+  const cs=G_CASE[f[0]], nu=G_NUM[f[1]], ge=G_GEN[f[2]];
+  const bits=[cs,ge,nu].filter(Boolean);
+  return bits.length ? `${base} — ${bits.join(" ")}` : base;
+}
+function isGreek(w){ return (w.sfull&&w.sfull[0]==='G') || w.lang==='grc' || (curBook.idioma==='grc'); }
 
 /* ---------- Modal da palavra ---------- */
 const overlay=document.getElementById('overlay');
@@ -405,12 +461,12 @@ async function openWord(w){
   document.getElementById('m-translit').textContent=w.tr;
   document.getElementById('m-gloss').textContent=w.pt==='—'?'(sem tradução)':(w.pt||w.en);
   document.getElementById('m-glossen').textContent="Inglês: "+w.en;
-  document.getElementById('m-morph').textContent=decodeMorph(w.morph);
+  document.getElementById('m-morph').textContent = isGreek(w) ? decodeGreek(w.morph) : decodeMorph(w.morph);
   document.getElementById('m-morphcode').textContent="Código: "+w.morph;
   const def=document.getElementById('m-def');
   def.textContent='Carregando…';
   overlay.classList.add('open');
-  const d=await fetchLex(w.s);
+  const d=await fetchLex(w);
   def.textContent = d || 'Definição ainda não disponível para este Strong.';
 }
 textEl.addEventListener('click',e=>{
@@ -525,7 +581,7 @@ async function boot(){
       if(r.ok){ const j=await r.json(); if(j.length) BOOKS=j; }
     }catch(e){}
   }
-  if(!BOOKS.length) BOOKS=[{livro:'Gen',nome:'Gênesis',total_caps:Math.max(...FALLBACK.versos.map(v=>v.cap))}];
+  if(!BOOKS.length) BOOKS=[{livro:'Gen',nome:'Gênesis',total_caps:Math.max(...FALLBACK.versos.map(v=>v.cap)),idioma:'heb'}];
   curBook = BOOKS.find(b=>b.livro==='Gen') || BOOKS[0];
   loadedCaps = Array.from({length:curBook.total_caps},(_,i)=>i+1);
   buildBookSel();
